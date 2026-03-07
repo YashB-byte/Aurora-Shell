@@ -1,6 +1,5 @@
 #!/bin/bash
-# --- AURORA SYSTEM INSTALLER v4.1.0 ---
-# Optimized for macOS (Zsh) and Linux (Bash)
+# --- AURORA SYSTEM INSTALLER v4.2.0 ---
 
 # 0. VERBOSE SETTINGS
 VERBOSE=false
@@ -11,7 +10,6 @@ fi
 
 # 1. SET PASSWORD
 echo -e "\033[0;35m🌌 Aurora Setup: Set your Terminal Lock Password\033[0m"
-# Using /dev/tty ensures read works even when piping from curl
 read -rs -p "Set new Terminal Password: " NEW_PASS </dev/tty
 echo ""
 read -rs -p "Confirm Password: " CONFIRM_PASS </dev/tty
@@ -46,7 +44,6 @@ fi
 mkdir -p "$INSTALL_PATH"
 
 echo "📥 Cloning Aurora Shell..."
-# We keep --progress and remove 2>/dev/null so you see exactly what Git is doing
 if [ "$VERBOSE" = true ]; then
     git clone --verbose --progress https://github.com/YashB-byte/aurora-shell-2.git "$INSTALL_PATH/repo"
 else
@@ -54,7 +51,6 @@ else
 fi
 
 # 4. GENERATE THE THEME FILE
-# We write the password and the lock logic into a standalone script
 printf 'CORRECT_PASSWORD="%s"\n' "$NEW_PASS" > "$INSTALL_PATH/aurora_theme.sh"
 
 cat << 'EOF' >> "$INSTALL_PATH/aurora_theme.sh"
@@ -62,7 +58,6 @@ cat << 'EOF' >> "$INSTALL_PATH/aurora_theme.sh"
 echo -e "\033[0;35m🔐 Aurora Terminal Lock\033[0m"
 ATTEMPTS=0
 while [ $ATTEMPTS -lt 3 ]; do
-    # Check if running in Zsh or Bash for the correct 'read' syntax
     if [ -n "$ZSH_VERSION" ]; then 
         read -rs "ui?Password: " </dev/tty
     else 
@@ -70,7 +65,6 @@ while [ $ATTEMPTS -lt 3 ]; do
     fi
     echo ""
     
-    # Clean input and verify
     if [ "$(echo "$ui" | xargs)" = "$CORRECT_PASSWORD" ]; then
         echo -e "\033[0;32m✅ Access Granted.\033[0m"
         break
@@ -86,28 +80,53 @@ while [ $ATTEMPTS -lt 3 ]; do
     fi
 done
 
+# --- AURORA DISPLAY LOGIC ---
+aurora_display() {
+    local date_str=$(date +"%m/%d/%y")
+    local battery=$(pmset -g batt 2>/dev/null | grep -Eo "\d+%" | head -1 || echo "N/A")
+    local cpu_usage=$(top -l 1 | grep "CPU usage" | awk '{print $3}' | sed 's/%//')
+    
+    echo -e "
+              █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ 
+             ██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗
+             ███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║
+             ██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║
+             ██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║
+             ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
+                                                               
+                 ███████╗██╗  ██╗███████╗██╗     ██╗                
+                 ██╔════╝██║  ██║██╔════╝██║     ██║                
+                 ███████╗███████║█████╗  ██║     ██║                
+                 ╚════██║██╔══██║██╔══╝  ██║     ██║                
+                 ███████║██║  ██║███████╗███████╗███████╗          
+                 ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝" | lolcat
+
+    echo -e "📅 $date_str | 🔋 $battery | 🧠 CPU: $cpu_usage%"
+    echo "--------------------------------------"
+}
+
+# Run the display
+aurora_display
+
 # --- LOAD AURORA CORE ---
 if [ -f "$HOME/.aurora-shell_2theme/repo/aurora_core.sh" ]; then
     source "$HOME/.aurora-shell_2theme/repo/aurora_core.sh"
 fi
 EOF
 
-# 5. INJECT INTO ZSHRC / BASHRC
+# 5. INJECT INTO CONFIG
 SHELL_CONFIG="$HOME/.zshrc"
 [[ "$SHELL" == *"bash"* ]] && SHELL_CONFIG="$HOME/.bashrc"
-
 LINE_TO_ADD="source $INSTALL_PATH/aurora_theme.sh"
 
 if ! grep -qF "$LINE_TO_ADD" "$SHELL_CONFIG"; then
-    echo "🔗 Linking Aurora to $SHELL_CONFIG..."
     echo "$LINE_TO_ADD" >> "$SHELL_CONFIG"
 fi
 
 echo -e "\033[0;32m✨ Aurora shell installed successfully!\033[0m"
 read -p "Would you like to activate it now? (y/n): " ACTIVATE </dev/tty
 if [[ "$ACTIVATE" =~ ^[Yy]$ ]]; then
-    echo "🚀 Activating..."
     source "$SHELL_CONFIG"
 else
-    echo "👍 No problem! Run 'source $SHELL_CONFIG' whenever you're ready."
+    echo "👍 Run 'source $SHELL_CONFIG' when ready."
 fi
