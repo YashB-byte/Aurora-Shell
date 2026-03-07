@@ -1,5 +1,6 @@
 #!/bin/bash
-# --- AURORA SYSTEM INSTALLER v4.0.0 ---
+# --- AURORA SYSTEM INSTALLER v4.1.0 ---
+# Optimized for macOS (Zsh) and Linux (Bash)
 
 # 0. VERBOSE SETTINGS
 VERBOSE=false
@@ -10,6 +11,7 @@ fi
 
 # 1. SET PASSWORD
 echo -e "\033[0;35m🌌 Aurora Setup: Set your Terminal Lock Password\033[0m"
+# Using /dev/tty ensures read works even when piping from curl
 read -rs -p "Set new Terminal Password: " NEW_PASS </dev/tty
 echo ""
 read -rs -p "Confirm Password: " CONFIRM_PASS </dev/tty
@@ -23,129 +25,89 @@ fi
 # 2. DEPENDENCY CHECK
 echo "🔍 Checking for required tools..."
 for tool in lolcat pygmentize git; do
-    if [ "$VERBOSE" = true ]; then
-        if ! command -v $tool; then
-            echo "📥 $tool not found. Attempting install..."
+    if ! command -v $tool &>/dev/null; then
+        echo "📥 $tool not found. Attempting install..."
+        if [[ "$OSTYPE" == "darwin"* ]]; then
             brew install $tool || pip3 install $tool
-        fi
-    else
-        if ! command -v $tool &>/dev/null; then
-            echo "📥 $tool not found. Attempting install..."
-            brew install $tool &>/dev/null || pip3 install $tool &>/dev/null
+        else
+            sudo apt-get install -y $tool || pip3 install $tool
         fi
     fi
 done
 
-# 3. FILE SETUP
+# 3. FILE SETUP (PURGE & CLONE)
 INSTALL_PATH="$HOME/.aurora-shell_2theme"
+
+if [ -d "$INSTALL_PATH" ]; then
+    echo "🧹 Purging old Aurora files to ensure a clean sync..."
+    rm -rf "$INSTALL_PATH"
+fi
+
 mkdir -p "$INSTALL_PATH"
 
 echo "📥 Cloning Aurora Shell..."
+# We keep --progress and remove 2>/dev/null so you see exactly what Git is doing
 if [ "$VERBOSE" = true ]; then
-    git clone https://github.com/YashB-byte/aurora-shell-2.git "$INSTALL_PATH/repo" || (cd "$INSTALL_PATH/repo" && git pull)
+    git clone --verbose --progress https://github.com/YashB-byte/aurora-shell-2.git "$INSTALL_PATH/repo"
 else
-    git clone https://github.com/YashB-byte/aurora-shell-2.git "$INSTALL_PATH/repo" 2>/dev/null || (cd "$INSTALL_PATH/repo" && git pull 2>/dev/null)
+    git clone --progress https://github.com/YashB-byte/aurora-shell-2.git "$INSTALL_PATH/repo"
 fi
 
 # 4. GENERATE THE THEME FILE
+# We write the password and the lock logic into a standalone script
 printf 'CORRECT_PASSWORD="%s"\n' "$NEW_PASS" > "$INSTALL_PATH/aurora_theme.sh"
-cat << 'EOF' >> "$INSTALL_PATH/aurora_theme.sh"
 
-# --- SECURITY LOCK ---
+cat << 'EOF' >> "$INSTALL_PATH/aurora_theme.sh"
+# --- AURORA SECURITY LOCK ---
 echo -e "\033[0;35m🔐 Aurora Terminal Lock\033[0m"
 ATTEMPTS=0
 while [ $ATTEMPTS -lt 3 ]; do
-    if [ -n "$ZSH_VERSION" ]; then read -rs "?Password: " ui </dev/tty; else read -rsp "Password: " ui </dev/tty; fi
+    # Check if running in Zsh or Bash for the correct 'read' syntax
+    if [ -n "$ZSH_VERSION" ]; then 
+        read -rs "ui?Password: " </dev/tty
+    else 
+        read -rsp "Password: " ui </dev/tty
+    fi
     echo ""
+    
+    # Clean input and verify
     if [ "$(echo "$ui" | xargs)" = "$CORRECT_PASSWORD" ]; then
-        echo -e "\033[0;32m✅ Access Granted.\033[0m"; break
+        echo -e "\033[0;32m✅ Access Granted.\033[0m"
+        break
     else
         ATTEMPTS=$((ATTEMPTS + 1))
-        [ $ATTEMPTS -lt 3 ] && echo "❌ Incorrect. $((3-ATTEMPTS)) left." && sleep 2 || { echo "❌ Denied."; exit 1; }
+        REMAINING=$((3 - ATTEMPTS))
+        if [ $ATTEMPTS -lt 3 ]; then
+            echo -e "\033[0;33m❌ Incorrect. $REMAINING attempts left.\033[0m"
+        else
+            echo -e "\033[0;31m❌ Access Denied. Locking session.\033[0m"
+            exit 1
+        fi
     fi
 done
 
-# --- LOGO & STATS ---
-aurora_display() {
-    local battery=$(pmset -g batt 2>/dev/null | grep -Eo "\d+%" | head -1 || echo "N/A")
-    echo " 
-             █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ 
-            ██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗
-            ███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║
-            ██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║
-            ██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║
-            ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
-                                                  
-                ███████╗██╗  ██╗███████╗██╗     ██╗               
-                ██╔════╝██║  ██║██╔════╝██║     ██║               
-                ███████╗███████║█████╗  ██║     ██║               
-                ╚════██║██╔══██║██╔══╝  ██║     ██║               
-                ███████║██║  ██║███████╗███████╗███████╗          
-                ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝" | lolcat
-    echo -e "                 \033[0;36m📅 $(date +%D) | 🔋 $battery | 🧠 CPU: $(top -l 1 | grep "CPU usage" | awk '{print $3}')\033[0m" | lolcat
-    echo -e "                 -------------------------------------" | lolcat
-}
-aurora_display
-
-# --- THE INTERACTIVE COMMAND CENTER ---
-shell.aurora() {
-    case "$1" in
-        "lock"|"--lock") 
-            clear && source "$HOME/.aurora-shell_2theme/aurora_theme.sh" ;;
-        "pass"|"--pass")
-            if [ -n "$ZSH_VERSION" ]; then read -rs "?Current Pass: " op; else read -rsp "Current Pass: " op; fi
-            echo ""
-            if [ "$op" = "$CORRECT_PASSWORD" ]; then
-                if [ -n "$ZSH_VERSION" ]; then read -rs "?New Pass: " np; else read -rsp "New Pass: " np; fi
-                echo ""
-                sed -i '' "s/CORRECT_PASSWORD=\".*\"/CORRECT_PASSWORD=\"$np\"/" "$HOME/.aurora-shell_2theme/aurora_theme.sh"
-                CORRECT_PASSWORD="$np" && echo "✅ Updated!"
-            else
-                echo "❌ Wrong password."
-            fi ;;
-        "update"|"--update")
-            local VER=${2:-"main"}
-            echo -e "\033[0;35m🔄 Updating Aurora to version: $VER...\033[0m"
-            curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/$VER/install.sh" | bash
-            ;;
-        *) 
-            echo -e "\033[1;35m🌌 Aurora Command Center\033[0m"
-            echo "---------------------------------------"
-            echo -e "🚀 [1] lock   : Re-engage terminal lock"
-            echo -e "🔑 [2] pass   : Change your password"
-            echo -e "🔄 [3] update : Pull latest from GitHub"
-            echo -e "❓ [4] help   : Show this manual"
-            echo "---------------------------------------"
-            echo -en "\033[0;36mSelect an option (1-4): \033[0m"
-            read -r choice
-            case "$choice" in
-                1) shell.aurora lock ;;
-                2) shell.aurora pass ;;
-                3) shell.aurora update ;;
-                4|*) echo -e "Usage: shell.aurora [lock|pass|update]" ;;
-            esac
-            ;;
-    esac
-}
-
-alias aurora="shell.aurora"
-export PROMPT="%F{green}🌌 Aurora %F{gray}%n@%m: %f"
+# --- LOAD AURORA CORE ---
+if [ -f "$HOME/.aurora-shell_2theme/repo/aurora_core.sh" ]; then
+    source "$HOME/.aurora-shell_2theme/repo/aurora_core.sh"
+fi
 EOF
 
-# 5. LINK TO ZSHRC
-ZSH_CONFIG="$HOME/.zshrc"
-grep -q "aurora_theme.sh" "$ZSH_CONFIG" || echo "source $INSTALL_PATH/aurora_theme.sh" >> "$ZSH_CONFIG"
+# 5. INJECT INTO ZSHRC / BASHRC
+SHELL_CONFIG="$HOME/.zshrc"
+[[ "$SHELL" == *"bash"* ]] && SHELL_CONFIG="$HOME/.bashrc"
 
-# 6. SMART ACTIVATION PROMPT
-echo -e "\033[0;32m✨ Aurora shell Installed successfully!\033[0m"
-echo -n "Would you like to activate it now? (y/n): "
-read -r activate
+LINE_TO_ADD="source $INSTALL_PATH/aurora_theme.sh"
 
-if [[ "$activate" == "y" || "$activate" == "Y" ]]; then
+if ! grep -qF "$LINE_TO_ADD" "$SHELL_CONFIG"; then
+    echo "🔗 Linking Aurora to $SHELL_CONFIG..."
+    echo "$LINE_TO_ADD" >> "$SHELL_CONFIG"
+fi
+
+echo -e "\033[0;32m✨ Aurora shell installed successfully!\033[0m"
+read -p "Would you like to activate it now? (y/n): " ACTIVATE </dev/tty
+if [[ "$ACTIVATE" =~ ^[Yy]$ ]]; then
     echo "🚀 Activating..."
-    sleep 1
-    zsh
-    source ~/.zshrc
+    source "$SHELL_CONFIG"
 else
-    echo "👍 No problem! Run 'source ~/.zshrc' whenever you're ready."
+    echo "👍 No problem! Run 'source $SHELL_CONFIG' whenever you're ready."
 fi
