@@ -1,42 +1,134 @@
 name: Aurora Release Build
 permissions:
-  contents: read
+  contents: write
+
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
-  macos-dist:
+  macos-build:
     runs-on: macos-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Get Version
+        id: version
+        run: |
+          VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.4.0")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Prepare Scripts
         run: |
           mkdir -p build/scripts
-          # Use the script you provided as the post-install trigger
           cp install.sh build/scripts/postinstall
           chmod +x build/scripts/postinstall
 
-      - name: Create Installer Package (.pkg)
+      - name: Create PKG
         run: |
-          # Creates a package that runs your code on completion
           pkgbuild --identifier com.yashb.aurora \
-                   --version 4.0.0 \
+                   --version ${{ steps.version.outputs.version }} \
                    --scripts build/scripts \
                    --nopayload \
-                   Aurora-Installer.pkg
+                   AuroraShell.pkg
 
-      - name: Create DMG
+      - name: Create DMG with PKG inside
         run: |
-          mkdir -p dist
-          cp Aurora-Installer.pkg dist/
-          hdiutil create -volname "Aurora Shell" -srcfolder dist -ov -format UDZO Aurora-Shell-v4.dmg
+          mkdir -p dmg-contents
+          cp AuroraShell.pkg dmg-contents/
+          hdiutil create -volname "Aurora Shell ${{ steps.version.outputs.version }}" \
+                         -srcfolder dmg-contents \
+                         -ov -format UDZO \
+                         AuroraShell-${{ steps.version.outputs.version }}.dmg
 
-      - name: Upload Release Artifact
+      - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: Aurora-Mac-Installer
-          path: Aurora-Shell-v4.dmg
+          name: AuroraShell-macOS-DMG
+          path: AuroraShell-${{ steps.version.outputs.version }}.dmg
+
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Get Version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.4.0")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
+      - name: Create NSIS Installer Script
+        shell: bash
+        run: |
+          cat > installer.nsi << 'EOF'
+          !include "MUI2.nsh"
+          
+          Name "Aurora Shell"
+          OutFile "aurora-installer.exe"
+          InstallDir "$LOCALAPPDATA\AuroraShell"
+          RequestExecutionLevel user
+          
+          !insertmacro MUI_PAGE_WELCOME
+          !insertmacro MUI_PAGE_DIRECTORY
+          !insertmacro MUI_PAGE_INSTFILES
+          !insertmacro MUI_PAGE_FINISH
+          
+          !insertmacro MUI_LANGUAGE "English"
+          
+          Section "Install"
+            SetOutPath "$INSTDIR"
+            File "install.ps1"
+            File "aurora_theme.ps1"
+            File "chat.sh"
+            File "auseaia.js"
+            File "package.json"
+            
+            ExecWait 'powershell -ExecutionPolicy Bypass -File "$INSTDIR\install.ps1"'
+          SectionEnd
+          EOF
+
+      - name: Build EXE
+        run: makensis installer.nsi
+
+      - name: Create ZIP with EXE inside
+        shell: bash
+        run: |
+          mkdir -p zip-contents
+          cp aurora-installer.exe zip-contents/
+          cd zip-contents
+          7z a ../AuroraShell-${{ steps.version.outputs.version }}-Windows.zip aurora-installer.exe
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuroraShell-Windows-ZIP
+          path: AuroraShell-${{ steps.version.outputs.version }}-Windows.zip
+
+  create-release:
+    needs: [macos-build, windows-build]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            AuroraShell-macOS-DMG/*
+            AuroraShell-Windows-ZIP/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
