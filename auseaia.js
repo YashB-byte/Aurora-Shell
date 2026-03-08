@@ -1,10 +1,10 @@
 const { Ollama } = require('ollama');
-const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
 const ollama = new Ollama();
 const historyPath = path.join(__dirname, 'history.json');
+const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
 let messages = [];
 if (fs.existsSync(historyPath)) {
@@ -21,12 +21,17 @@ async function chat(userInput) {
     if (messages.length === 0) {
         messages.push({ 
             role: 'system', 
-            content: "You are Auseaia, a helpful AI assistant running locally via Llama3. You help with coding, analysis, and terminal tasks. Be concise and direct. If asked to execute commands, provide the command but explain what it does." 
+            content: "You are Auseaia, a helpful AI assistant running locally via Llama3. You help with coding, analysis, and terminal tasks. Be concise and direct." 
         });
     }
 
     messages.push({ role: 'user', content: userInput });
 
+    let i = 0;
+    const loader = setInterval(() => {
+        process.stdout.write(`\r${frames[i++ % frames.length]} Thinking...`);
+    }, 80);
+    
     try {
         const response = await ollama.chat({ 
             model: 'llama3', 
@@ -35,7 +40,14 @@ async function chat(userInput) {
         });
 
         let reply = '';
+        let firstChunk = true;
+        
         for await (const part of response) {
+            if (firstChunk) {
+                clearInterval(loader);
+                process.stdout.write('\r\x1b[K');
+                firstChunk = false;
+            }
             process.stdout.write(part.message.content);
             reply += part.message.content;
         }
@@ -45,7 +57,8 @@ async function chat(userInput) {
         fs.writeFileSync(historyPath, JSON.stringify(messages, null, 2));
 
     } catch (error) {
-        console.error("\n❌ Error: Unable to connect to Ollama. Make sure it's running.\n");
+        clearInterval(loader);
+        console.error("\n❌ Error: Unable to connect to Ollama. Make sure it's running with 'ollama serve'\n");
     }
 }
 
