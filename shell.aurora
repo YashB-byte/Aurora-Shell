@@ -34,7 +34,12 @@ shell.aurora() {
             fi
             
             echo -e "\033[0;35m🔄 Updating Aurora Shell to $VERSION from branch: $VER...\033[0m"
-            curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/$VER/install.sh" | PRESERVED_PASSWORD="$CORRECT_PASSWORD" bash
+            
+            # Download installer and run with preserved password
+            TEMP_INSTALLER=$(mktemp)
+            curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/$VER/install.sh" > "$TEMP_INSTALLER"
+            PRESERVED_PASSWORD="$CORRECT_PASSWORD" bash "$TEMP_INSTALLER"
+            rm "$TEMP_INSTALLER"
             ;;
         *) 
             echo -e "\033[1;35m🌌 Aurora Command Center\033[0m"
