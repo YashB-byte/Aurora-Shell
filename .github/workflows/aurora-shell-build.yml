@@ -19,7 +19,11 @@ jobs:
       - name: Get Version
         id: version
         run: |
-          VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.4.0")
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.4.0")
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Prepare Scripts
@@ -89,7 +93,11 @@ jobs:
         id: version
         shell: bash
         run: |
-          VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.4.0")
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.4.0")
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create ZIP with installer script
