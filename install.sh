@@ -1,5 +1,5 @@
 #!/bin/bash
-# --- AURORA SYSTEM INSTALLER v4.4.3 ---
+# --- AURORA SYSTEM INSTALLER v4.4.6 ---
 # Centered UI | Conflict Resolution | Zsh-Optimized
 
 # 0. PRE-CLEAN & SETTINGS
