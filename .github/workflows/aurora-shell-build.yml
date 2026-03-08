@@ -64,49 +64,15 @@ jobs:
           VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.4.0")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Install NSIS
-        run: choco install nsis -y
-
-      - name: Create NSIS Installer Script
+      - name: Create ZIP with installer script
         shell: bash
         run: |
-          cat > installer.nsi << 'EOF'
-          !include "MUI2.nsh"
-          
-          Name "Aurora Shell"
-          OutFile "aurora-installer.exe"
-          InstallDir "$LOCALAPPDATA\AuroraShell"
-          RequestExecutionLevel user
-          
-          !insertmacro MUI_PAGE_WELCOME
-          !insertmacro MUI_PAGE_DIRECTORY
-          !insertmacro MUI_PAGE_INSTFILES
-          !insertmacro MUI_PAGE_FINISH
-          
-          !insertmacro MUI_LANGUAGE "English"
-          
-          Section "Install"
-            SetOutPath "$INSTDIR"
-            File "install.ps1"
-            File "aurora_theme.ps1"
-            File "chat.sh"
-            File "auseaia.js"
-            File "package.json"
-            
-            ExecWait 'powershell -ExecutionPolicy Bypass -File "$INSTDIR\install.ps1"'
-          SectionEnd
-          EOF
-
-      - name: Build EXE
-        run: makensis installer.nsi
-
-      - name: Create ZIP with EXE inside
-        shell: bash
-        run: |
-          mkdir -p zip-contents
-          cp aurora-installer.exe zip-contents/
-          cd zip-contents
-          7z a ../AuroraShell-${{ steps.version.outputs.version }}-Windows.zip aurora-installer.exe
+          mkdir -p aurora-windows
+          cp install.ps1 aurora-windows/
+          cp aurora_theme.ps1 aurora-windows/
+          cp README.md aurora-windows/
+          cd aurora-windows
+          7z a ../AuroraShell-${{ steps.version.outputs.version }}-Windows.zip *
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
