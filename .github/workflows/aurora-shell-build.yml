@@ -24,12 +24,50 @@ jobs:
 
       - name: Prepare Scripts
         run: |
-          mkdir -p dmg-contents
-          cp install.sh dmg-contents/
-          chmod +x dmg-contents/install.sh
+          mkdir -p build/scripts
+          cp install.sh build/scripts/postinstall
+          chmod +x build/scripts/postinstall
 
-      - name: Create DMG with installer script
+      - name: Create Component PKG
         run: |
+          pkgbuild --scripts build/scripts \
+                   --identifier com.yashb.aurora \
+                   --version ${{ steps.version.outputs.version }} \
+                   --nopayload \
+                   build/AuroraShell-component.pkg
+
+      - name: Create Distribution XML
+        run: |
+          cat > build/distribution.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <installer-gui-script minSpecVersion="1">
+              <title>Aurora Shell</title>
+              <organization>com.yashb</organization>
+              <domains enable_localSystem="false" enable_anywhere="false" enable_currentUserHome="true"/>
+              <options customize="never" require-scripts="false" rootVolumeOnly="true"/>
+              <choices-outline>
+                  <line choice="default">
+                      <line choice="com.yashb.aurora"/>
+                  </line>
+              </choices-outline>
+              <choice id="default"/>
+              <choice id="com.yashb.aurora" visible="false">
+                  <pkg-ref id="com.yashb.aurora"/>
+              </choice>
+              <pkg-ref id="com.yashb.aurora" onConclusion="none">AuroraShell-component.pkg</pkg-ref>
+          </installer-gui-script>
+          EOF
+
+      - name: Create Final PKG
+        run: |
+          productbuild --distribution build/distribution.xml \
+                       --package-path build \
+                       AuroraShell.pkg
+
+      - name: Create DMG with PKG inside
+        run: |
+          mkdir -p dmg-contents
+          cp AuroraShell.pkg dmg-contents/
           hdiutil create -volname "Aurora Shell ${{ steps.version.outputs.version }}" \
                          -srcfolder dmg-contents \
                          -ov -format UDZO \
