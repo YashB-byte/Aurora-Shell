@@ -37,11 +37,13 @@ shell.aurora() {
             
             # Download installer and run with preserved password
             TEMP_INSTALLER=$(mktemp)
+            trap "rm -f '$TEMP_INSTALLER'" EXIT
             curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/$VER/install.sh" > "$TEMP_INSTALLER"
             export PRESERVED_PASSWORD="$CORRECT_PASSWORD"
             bash "$TEMP_INSTALLER"
             unset PRESERVED_PASSWORD
-            rm "$TEMP_INSTALLER"
+            trap - EXIT
+            rm -f "$TEMP_INSTALLER"
             ;;
         *) 
             echo -e "\033[1;35m🌌 Aurora Command Center\033[0m"
