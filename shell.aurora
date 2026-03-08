@@ -38,7 +38,9 @@ shell.aurora() {
             # Download installer and run with preserved password
             TEMP_INSTALLER=$(mktemp)
             curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/$VER/install.sh" > "$TEMP_INSTALLER"
-            PRESERVED_PASSWORD="$CORRECT_PASSWORD" bash "$TEMP_INSTALLER"
+            export PRESERVED_PASSWORD="$CORRECT_PASSWORD"
+            bash "$TEMP_INSTALLER"
+            unset PRESERVED_PASSWORD
             rm "$TEMP_INSTALLER"
             ;;
         *) 
