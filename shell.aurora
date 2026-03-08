@@ -20,7 +20,12 @@ shell.aurora() {
             local VER=${2:-"main"}
             local VERSION=$(curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/$VER/install.sh" | grep "AURORA SYSTEM INSTALLER" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
             echo -e "\033[0;35m🔄 Updating Aurora Shell to $VERSION from branch: $VER...\033[0m"
-            curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/$VER/install.sh" | bash
+            
+            # Backup current password
+            local OLD_PASS="$CORRECT_PASSWORD"
+            
+            # Run installer with preserved password
+            curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/$VER/install.sh" | PRESERVED_PASSWORD="$OLD_PASS" bash
             ;;
         *) 
             echo -e "\033[1;35m🌌 Aurora Command Center\033[0m"

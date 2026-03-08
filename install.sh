@@ -8,11 +8,17 @@ VERBOSE=false
 INSTALL_PATH="$HOME/.aurora-shell_2theme"
 
 # 1. SET PASSWORD
-echo -e "\033[0;35m🌌 Aurora Setup: Set your Terminal Lock Password\033[0m"
-read -rs -p "Set new Terminal Password: " NEW_PASS </dev/tty
-echo ""
-read -rs -p "Confirm Password: " CONFIRM_PASS </dev/tty
-echo ""
+if [ -n "$PRESERVED_PASSWORD" ]; then
+    echo -e "\033[0;36m🔄 Preserving existing password...\033[0m"
+    NEW_PASS="$PRESERVED_PASSWORD"
+    CONFIRM_PASS="$PRESERVED_PASSWORD"
+else
+    echo -e "\033[0;35m🌌 Aurora Setup: Set your Terminal Lock Password\033[0m"
+    read -rs -p "Set new Terminal Password: " NEW_PASS </dev/tty
+    echo ""
+    read -rs -p "Confirm Password: " CONFIRM_PASS </dev/tty
+    echo ""
+fi
 
 if [[ "$NEW_PASS" != "$CONFIRM_PASS" ]]; then
     echo -e "\033[0;31m❌ Passwords do not match. Installation aborted.\033[0m"
