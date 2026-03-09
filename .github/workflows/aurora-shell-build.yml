@@ -131,7 +131,7 @@ jobs:
       - name: Build EXE with NSIS
         run: |
           choco install nsis -y
-          makensis installer.nsi
+          & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi
 
       - name: Create ZIP with EXE inside
         shell: bash
