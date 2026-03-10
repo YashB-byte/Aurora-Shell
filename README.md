@@ -14,7 +14,7 @@ Cross-Platform: Tailored experiences for both Mac and Windows environments.
 🍎 For macOS (Zsh)
 
 **Option 1: Download Installer (.dmg)**
-1. Download [AuroraShell-2.0.0.dmg](https://github.com/YashB-byte/aurora-shell-2/releases/download/v2.0.0/AuroraShell-2.0.0.dmg)
+1. Download the latest [AuroraShell.dmg](https://github.com/YashB-byte/aurora-shell-2/releases/latest)
 2. Open the .dmg file
 3. Open Terminal and run:
    ```bash
@@ -75,3 +75,7 @@ To remove Aurora Shell on MacOS:
 curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/uninstall.sh | bash
 ```
  
+or for windows:
+```powershell
+Invoke-RestMethod -Uri "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/uninstall.ps1" | PowerShell -ExecutionPolicy Bypass -Command -
+```
