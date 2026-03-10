@@ -127,53 +127,53 @@ function aurora {
     param([string]`$Command)
     
     switch (`$Command) {
-        "lock" { 
+        'lock' { 
             Clear-Host
             Show-AuroraLock
             Show-AuroraDisplay
         }
-        "pass" {
-            `$op = Read-Host -AsSecureString "Current Pass"
+        'pass' {
+            `$op = Read-Host -AsSecureString 'Current Pass'
             `$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR(`$op)
             `$CurrentInput = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(`$BSTR)
             
             if (`$CurrentInput -eq `$CORRECT_PASSWORD) {
-                `$np = Read-Host -AsSecureString "New Pass"
+                `$np = Read-Host -AsSecureString 'New Pass'
                 `$BSTR2 = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR(`$np)
                 `$NewInput = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(`$BSTR2)
                 
-                (Get-Content "$InstallPath\aurora_theme.ps1") -replace "CORRECT_PASSWORD = `".*`"", "CORRECT_PASSWORD = `"`$NewInput`"" | Set-Content "$InstallPath\aurora_theme.ps1"
+                (Get-Content '$InstallPath\aurora_theme.ps1') -replace 'CORRECT_PASSWORD = \".*\"', \"CORRECT_PASSWORD = \`\"`$NewInput\`\"\" | Set-Content '$InstallPath\aurora_theme.ps1'
                 `$global:CORRECT_PASSWORD = `$NewInput
-                Write-Host "✅ Password updated!" -ForegroundColor Green
+                Write-Host '✅ Password updated!' -ForegroundColor Green
             } else {
-                Write-Host "❌ Wrong password." -ForegroundColor Red
+                Write-Host '❌ Wrong password.' -ForegroundColor Red
             }
         }
-        "update" {
-            `$verify = Read-Host -AsSecureString "Enter password to update"
+        'update' {
+            `$verify = Read-Host -AsSecureString 'Enter password to update'
             `$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR(`$verify)
             `$VerifyInput = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(`$BSTR)
             
             if (`$VerifyInput -ne `$CORRECT_PASSWORD) {
-                Write-Host "❌ Incorrect password. Update cancelled." -ForegroundColor Red
+                Write-Host '❌ Incorrect password. Update cancelled.' -ForegroundColor Red
                 return
             }
             
-            Write-Host "🔄 Updating Aurora Shell from main branch..." -ForegroundColor Magenta
-            `$TempInstaller = [System.IO.Path]::GetTempFileName() + ".ps1"
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/install.ps1" -OutFile `$TempInstaller
+            Write-Host '🔄 Updating Aurora Shell from main branch...' -ForegroundColor Magenta
+            `$TempInstaller = [System.IO.Path]::GetTempFileName() + '.ps1'
+            Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/install.ps1' -OutFile `$TempInstaller
             `$env:PRESERVED_PASSWORD = `$CORRECT_PASSWORD
             & `$TempInstaller
             Remove-Item `$TempInstaller
         }
         default {
-            Write-Host "🌌 Aurora Command Center" -ForegroundColor Magenta
-            Write-Host "---------------------------------------"
-            Write-Host "🚀 [1] lock   : Re-engage terminal lock"
-            Write-Host "🔑 [2] pass   : Change password"
-            Write-Host "🔄 [3] update : Update Aurora Shell"
-            Write-Host ""
-            Write-Host "Usage: aurora lock | aurora pass | aurora update"
+            Write-Host '🌌 Aurora Command Center' -ForegroundColor Magenta
+            Write-Host '---------------------------------------'
+            Write-Host '🚀 [1] lock   : Re-engage terminal lock'
+            Write-Host '🔑 [2] pass   : Change password'
+            Write-Host '🔄 [3] update : Update Aurora Shell'
+            Write-Host ''
+            Write-Host 'Usage: aurora lock | aurora pass | aurora update'
         }
     }
 }
