@@ -1,34 +1,27 @@
 #!/bin/bash
+# --- AURORA UNINSTALLER v4.4.7 ---
 
-echo "🌌 Uninstalling Aurora Shell..."
+INSTALL_PATH="$HOME/.aurora-shell_2theme"
 
-# 1. Define paths
-AURORA_DIR="$HOME/.aurora-shell"
-THEME_FILE="$AURORA_DIR/aurora_theme.sh"
-ZSHRC="$HOME/.zshrc"
+echo -e "\033[0;33m⚠️ Uninstalling Aurora Shell...\033[0m"
 
-# 2. Remove the theme file if it exists
-if [ -f "$THEME_FILE" ]; then
-    rm "$THEME_FILE"
-    echo "✓ Removed $THEME_FILE"
+# 1. Remove Files
+if [ -d "$INSTALL_PATH" ]; then
+    rm -rf "$INSTALL_PATH"
+    echo "✅ Removed Aurora system files."
 fi
 
-# 3. Remove the directory if it exists
-if [ -d "$AURORA_DIR" ]; then
-    rm -rf "$AURORA_DIR"
-    echo "✓ Removed $AURORA_DIR"
-fi
-
-# 4. Remove the line from .zshrc safely for both Mac and Linux
-if [ -f "$ZSHRC" ]; then
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS version of sed
-        sed -i '' '/aurora_theme.sh/d' "$ZSHRC"
-    else
-        # Linux version of sed
-        sed -i '/aurora_theme.sh/d' "$ZSHRC"
+# 2. Clean Shell Configs
+for config in "$HOME/.zshrc" "$HOME/.bashrc"; do
+    if [ -f "$config" ]; then
+        # Use sed to delete the line containing the aurora source
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' '/aurora_theme.sh/d' "$config"
+        else
+            sed -i '/aurora_theme.sh/d' "$config"
+        fi
+        echo "✅ Cleaned $config"
     fi
-    echo "✓ Removed Aurora Shell source line from $ZSHRC"
-fi
+done
 
-echo "✅ Aurora Shell uninstalled! Restart your terminal or run: source ~/.zshrc"
+echo -e "\033[0;32m✨ Aurora has been successfully removed.\033[0m"
