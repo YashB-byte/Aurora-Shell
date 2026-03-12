@@ -1,146 +1,152 @@
 #!/bin/bash
-# --- AURORA SYSTEM INSTALLER v4.4.6 ---
-# Centered UI | Conflict Resolution | Zsh-Optimized
 
-# 0. PRE-CLEAN & SETTINGS
-VERBOSE=false
-[[ "$1" == "-v" || "$1" == "--verbose" ]] && VERBOSE=true
+# --- AURORA SYSTEM INSTALLER (macOS/Zsh) v4.5.0 ---
+# Logic: Admin Brew -> User-Home Fallback | Dependency Check | Centered ASCII
+
+# 1. PRE-FLIGHT: HOMEBREW INSTALLATION LOGIC
+echo "🔍 Checking for Homebrew..."
+
+if ! command -v brew &> /dev/null; then
+    echo "📥 Homebrew missing. Attempting standard (Admin) installation..."
+    
+    # Try the standard install script first
+    if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+        echo "✅ Standard Brew installed successfully."
+        # Initialize for Intel or Apple Silicon
+        eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || eval "$(/usr/local/bin/brew shellenv)"
+    else
+        echo "⚠️ Admin installation failed (likely permissions). Falling back to User-Home install..."
+        
+        BREW_PATH="$HOME/homebrew"
+        if [ ! -d "$BREW_PATH" ]; then
+            mkdir -p "$BREW_PATH"
+            # Manually extract brew to home directory (No sudo required)
+            curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C "$BREW_PATH"
+        fi
+        
+        # Initialize for current session
+        eval "$($BREW_PATH/bin/brew shellenv)"
+        
+        # Persist path for future sessions in .zprofile
+        if ! grep -q "homebrew/bin/brew shellenv" "$HOME/.zprofile"; then
+            echo "eval \"\$($BREW_PATH/bin/brew shellenv)\"" >> "$HOME/.zprofile"
+        fi
+        echo "✅ User-Home Brew initialized."
+    fi
+else
+    echo "✅ Homebrew already present."
+fi
+
+# 2. VERIFY DEPENDENCIES
+echo "🔍 Verifying Dependencies (Git & lolcat)..."
+dependencies=(git lolcat)
+for dep in "${dependencies[@]}"; do
+    if ! command -v "$dep" &> /dev/null; then
+        echo "📥 Installing $dep..."
+        brew install "$dep"
+    fi
+done
+
 INSTALL_PATH="$HOME/.aurora-shell_2theme"
 
-# 1. SET PASSWORD
+# 3. CREDENTIALS
 if [ -n "$PRESERVED_PASSWORD" ]; then
-    echo -e "\033[0;36m🔄 Preserving existing password...\033[0m"
-    NEW_PASS="$PRESERVED_PASSWORD"
-    CONFIRM_PASS="$PRESERVED_PASSWORD"
+    PLAIN_PASS="$PRESERVED_PASSWORD"
 else
-    echo -e "\033[0;35m🌌 Aurora Setup: Set your Terminal Lock Password\033[0m"
-    read -rs -p "Set new Terminal Password: " NEW_PASS </dev/tty
-    echo ""
-    read -rs -p "Confirm Password: " CONFIRM_PASS </dev/tty
-    echo ""
-fi
+    echo -e "\033[35m🌌 Aurora Setup: Set your Terminal Lock Password\033[0m"
+    read -rs -p "Set new Terminal Password: " NEW_PASS
+    echo
+    read -rs -p "Confirm Password: " CONFIRM_PASS
+    echo
 
-if [[ "$NEW_PASS" != "$CONFIRM_PASS" ]]; then
-    echo -e "\033[0;31m❌ Passwords do not match. Installation aborted.\033[0m"
-    exit 1
-fi
-
-# 2. DEPENDENCY CHECK
-echo "🔍 Checking for required tools..."
-for tool in lolcat pygmentize git; do
-    if ! command -v $tool &>/dev/null; then
-        echo "📥 $tool not found. Installing..."
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            brew install $tool || pip3 install $tool
-        else
-            sudo apt-get install -y $tool || pip3 install $tool
-        fi
+    if [ "$NEW_PASS" != "$CONFIRM_PASS" ]; then
+        echo -e "\033[31m❌ Passwords do not match!\033[0m"
+        exit 1
     fi
-done
+    PLAIN_PASS="$NEW_PASS"
+fi
 
-# 3. FILE SETUP (PURGE & CLONE)
+# 4. PURGE & CLONE
 if [ -d "$INSTALL_PATH" ]; then
-    echo "🧹 Purging old Aurora files to prevent conflicts..."
+    echo "🧹 Purging old Aurora build..."
     rm -rf "$INSTALL_PATH"
 fi
-
 mkdir -p "$INSTALL_PATH"
 
-echo "📥 Cloning Aurora Shell..."
-if ! git clone --progress https://github.com/YashB-byte/aurora-shell-2.git "$INSTALL_PATH/repo"; then
-    echo -e "\033[0;31m❌ Failed to clone repository. Check your internet connection.\033[0m"
-    exit 1
-fi
+echo "📥 Cloning Aurora Shell v4.5.0..."
+REPO_PATH="$INSTALL_PATH/repo"
+git clone --progress https://github.com/YashB-byte/aurora-shell-2.git "$REPO_PATH"
 
-# 4. GENERATE THE THEME FILE
-printf 'CORRECT_PASSWORD="%s"\n' "$NEW_PASS" > "$INSTALL_PATH/aurora_theme.sh"
+# 5. GENERATE THEME ENGINE
+THEME_FILE="$INSTALL_PATH/aurora_theme.sh"
 
-cat << 'EOF' >> "$INSTALL_PATH/aurora_theme.sh"
-# --- CONFLICT RESOLUTION ---
-# This prevents the "parse error near ()" by clearing aliases before function loading
-unalias shell.aurora 2>/dev/null
-unalias auseaia 2>/dev/null
+cat << EOF > "$THEME_FILE"
+#!/bin/bash
+CORRECT_PASSWORD="$PLAIN_PASS"
 
-# --- AURORA SECURITY LOCK ---
-echo -e "\033[0;35m🔐 Aurora Terminal Lock\033[0m"
-ATTEMPTS=0
-while [ $ATTEMPTS -lt 3 ]; do
-    if [ -n "$ZSH_VERSION" ]; then 
-        read -rs "ui?Password: " </dev/tty
-    else 
-        read -rsp "Password: " ui </dev/tty
-    fi
-    echo ""
-    
-    if [ "$(echo "$ui" | xargs)" = "$CORRECT_PASSWORD" ]; then
-        echo -e "\033[0;32m✅ Access Granted.\033[0m"
-        break
-    else
-        ATTEMPTS=$((ATTEMPTS + 1))
-        REMAINING=$((3 - ATTEMPTS))
-        if [ $ATTEMPTS -lt 3 ]; then
-            echo -e "\033[0;33m❌ Incorrect. $REMAINING left.\033[0m"
+Show-AuroraLock() {
+    echo -e "\033[35m🔐 Aurora Terminal Lock\033[0m"
+    attempts=0
+    while [ \$attempts -lt 3 ]; do
+        read -rs -p "Password: " input_pass
+        echo
+        if [ "\$input_pass" == "\$CORRECT_PASSWORD" ]; then
+            echo -e "\033[32m✅ Access Granted.\033[0m"
+            return 0
         else
-            echo -e "\033[0;31m❌ Access Denied.\033[0m"
-            exit 1
+            ((attempts++))
+            echo -e "\033[33m❌ Incorrect. \$((3-attempts)) left.\033[0m"
+            if [ \$attempts -eq 3 ]; then exit; fi
         fi
-    fi
-done
-
-# --- AURORA DISPLAY LOGIC ---
-aurora_display() {
-    local date_str=$(date +"%m/%d/%y")
-    local battery=$(pmset -g batt 2>/dev/null | grep -Eo "\d+%" | head -1 || echo "N/A")
-    local cpu_usage=$(top -l 1 | grep "CPU usage" | awk '{print $3}' | sed 's/%//')
-    local free_space=$(df -h / | awk 'NR==2 {print $4}')
-    
-    local stats_line="📅 $date_str | 🔋 $battery | 🧠 CPU: $cpu_usage% | 📂 Free: $free_space"
-    local separator="------------------------------------------------------------"
-    local term_width=$(tput cols)
-
-    echo -e "
-              █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ 
-             ██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗
-             ███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║
-             ██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║
-             ██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║
-             ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
-                                                               
-                 ███████╗██╗  ██╗███████╗██╗     ██╗                
-                 ██╔════╝██║  ██║██╔════╝██║     ██║                
-                 ███████╗███████║█████╗  ██║     ██║                
-                 ╚════██║██╔══██║██╔══╝  ██║     ██║                
-                 ███████║██║  ██║███████╗███████╗███████╗          
-                 ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝" | lolcat
-
-    printf "%*s\n" $(( (${#stats_line} + term_width) / 2 )) "$stats_line" | lolcat
-    printf "%*s\n\n" $(( (${#separator} + term_width) / 2 )) "$separator" | lolcat
+    done
 }
 
-# Run the display
-clear
-aurora_display
+Show-AuroraDisplay() {
+    # System Telemetry
+    if command -v pmset &> /dev/null; then
+        battery=\$(pmset -g batt | grep -Eo "\d+%" | head -1)
+    else
+        battery="N/A"
+    fi
+    
+    cpu=\$(top -l 1 | grep "CPU usage" | awk '{print \$3}' | sed 's/%//')
+    disk=\$(df -h / | awk 'NR==2 {print \$4}')
+    window_width=\$(tput cols)
+    
+    stats_line="📅 \$(date +'%m/%d/%y') | 🔋 \$battery | 🧠 CPU: \${cpu}% | 💽 \${disk} Free"
+    padding_val=\$(( (window_width - \${#stats_line}) / 2 ))
+    padding=\$(printf '%*s' "\$padding_val")
 
-# --- LOAD REPO COMMANDS & PROMPT ---
-# This sources your custom shell prompt and AI assistant commands
-[[ -f "$HOME/.aurora-shell_2theme/repo/shell.aurora" ]] && source "$HOME/.aurora-shell_2theme/repo/shell.aurora"
-[[ -f "$HOME/.aurora-shell_2theme/repo/auseaia.sh" ]] && source "$HOME/.aurora-shell_2theme/repo/auseaia.sh"
-[[ -f "$HOME/.aurora-shell_2theme/repo/aurora_core.sh" ]] && source "$HOME/.aurora-shell_2theme/repo/aurora_core.sh"
+    ascii="
+  █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ 
+ ██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗
+ ███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║
+ ██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║
+ ██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║
+ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
+                                                   
+      ███████╗██╗  ██╗███████╗██╗     ██╗                
+      ██╔════╝██║  ██║██╔════╝██║     ██║                
+      ███████╗███████║█████╗  ██║     ██║                
+      ╚════██║██╔══██║██╔══╝  ██║     ██║                
+      ███████║██║  ██║███████╗███████╗███████╗          
+      ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝"
+
+    echo "\$ascii" | lolcat
+    echo -e "\033[36m\$padding\$stats_line\033[0m"
+}
+
+clear
+Show-AuroraLock
+Show-AuroraDisplay
 EOF
 
-# 5. INJECT INTO CONFIG
-SHELL_CONFIG="$HOME/.zshrc"
-[[ "$SHELL" == *"bash"* ]] && SHELL_CONFIG="$HOME/.bashrc"
-LINE_TO_ADD="source $INSTALL_PATH/aurora_theme.sh"
+chmod +x "$THEME_FILE"
 
-if ! grep -qF "$LINE_TO_ADD" "$SHELL_CONFIG"; then
-    echo "$LINE_TO_ADD" >> "$SHELL_CONFIG"
+# 6. SOURCE IN .ZSHRC
+if ! grep -q "source $THEME_FILE" "$HOME/.zshrc"; then
+    echo -e "\n# Aurora Shell Theme\nsource $THEME_FILE" >> "$HOME/.zshrc"
 fi
 
-echo -e "\033[0;32m✨ Aurora shell installed successfully!\033[0m"
-read -p "Would you like to activate it now? (y/n): " ACTIVATE </dev/tty
-if [[ "$ACTIVATE" =~ ^[Yy]$ ]]; then
-    zsh -c "source ~/.zshrc"
-else
-    echo "👍 Run 'source $SHELL_CONFIG' when ready."
-fi
+echo -e "\033[32m✨ Aurora v4.5.0 Installed!\033[0m"
+echo -e "\033[36m🔄 Restart terminal or run 'source ~/.zshrc' to activate.\033[0m"
