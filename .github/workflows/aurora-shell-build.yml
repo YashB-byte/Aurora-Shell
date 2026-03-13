@@ -1,15 +1,15 @@
-name: Aurora-shell Release Build
+name: Aurora Release Build
 permissions:
   contents: write
   pull-requests: write
 
 on:
   push:
-    branches: [ dev ] # Push to 'dev' to trigger the PR to 'main'
+    branches: [ dev ]
   workflow_dispatch:
 
 env:
-  # Forces all JavaScript actions to use the Node 24 engine
+  # This is the "Engine Switch"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -21,6 +21,10 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      
+      # This is the Fix: It removes the problem-matcher that triggers the Node warning
+      - name: Silence Node Warnings
+        run: echo "::remove-matcher owner=node::"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -30,7 +34,7 @@ jobs:
       - name: Get Version
         id: version
         run: |
-          VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.5.0")
+          VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.5.1")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Prepare Scripts
@@ -99,6 +103,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Silence Node Warnings
+        run: echo "::remove-matcher owner=node::"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -107,8 +114,6 @@ jobs:
       - name: Build EXE with NSIS
         run: |
           choco install nsis -y
-          
-          # Create NSIS script using bash 'cat' for reliability
           cat > installer.nsi << 'EOF'
           !include "MUI2.nsh"
           Name "Aurora Shell"
@@ -126,8 +131,6 @@ jobs:
             ExecWait 'powershell.exe -ExecutionPolicy Bypass -File "$INSTDIR\install.ps1"'
           SectionEnd
           EOF
-          
-          # Run the NSIS compiler
           "/c/Program Files (x86)/NSIS/makensis.exe" installer.nsi
 
       - name: Upload Artifact
@@ -143,6 +146,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Silence Node Warnings
+        run: echo "::remove-matcher owner=node::"
+
       - name: Download Artifacts
         uses: actions/download-artifact@v4
 
@@ -150,12 +156,9 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "build: update aurora system binaries"
+          commit-message: "build: update aurora binaries"
           title: "build: aurora-shell update"
-          body: |
-            Automated system build for Aurora Shell.
-            - Recompiled DMG and EXE using Node 24 environment.
-            - Verified installer script compatibility.
+          body: "Automated build compiled on Node 24 (cleaned environment)."
           branch: sys/build-update
           base: main
           delete-branch: true
