@@ -9,7 +9,6 @@ on:
   workflow_dispatch:
 
 env:
-  # This is the "Engine Switch"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -21,13 +20,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
-      # This is the Fix: It removes the problem-matcher that triggers the Node warning
+
       - name: Silence Node Warnings
         run: echo "::remove-matcher owner=node::"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
 
@@ -107,7 +105,7 @@ jobs:
         run: echo "::remove-matcher owner=node::"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
 
@@ -149,16 +147,28 @@ jobs:
       - name: Silence Node Warnings
         run: echo "::remove-matcher owner=node::"
 
-      - name: Download Artifacts
+      - name: Download macOS Artifact
         uses: actions/download-artifact@v4
+        with:
+          name: AuroraShell-macOS
+          path: .
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: AuroraShell-Windows
+          path: .
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "build: update aurora binaries"
-          title: "build: aurora-shell update"
-          body: "Automated build compiled on Node 24 (cleaned environment)."
+          commit-message: "build: update binaries for macOS and Windows"
+          title: "build: aurora-shell update (All Platforms)"
+          body: |
+            Automated system build for Aurora Shell.
+            - Recompiled DMG and EXE using Node 24.
+            - Cleaned environment logs.
           branch: sys/build-update
           base: main
           delete-branch: true
