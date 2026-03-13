@@ -1,14 +1,17 @@
-name: Aurora Release Build
+name: Aurora-Shell Release Build
 permissions:
   contents: write
   pull-requests: write
 
 on:
   push:
-    branches: [ dev ] # Push to 'dev' to trigger the PR to 'main'
+    # Trigger on 'dev' to create a PR to 'main'
+    # Or use [ main ] temporarily if you are testing directly on your primary branch
+    branches: [ dev ] 
   workflow_dispatch:
 
 env:
+  # The "Hammer" that forces all JS actions to use the Node 24 engine
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -16,10 +19,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4.1.0
+        uses: actions/setup-node@v4
         with:
           node-version: '24'
 
@@ -81,7 +84,7 @@ jobs:
                          AuroraShell-macOS.dmg
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4.1.8
+        uses: actions/upload-artifact@v4
         with:
           name: AuroraShell-macOS
           path: AuroraShell-macOS.dmg
@@ -90,10 +93,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4.1.0
+        uses: actions/setup-node@v4
         with:
           node-version: '24'
 
@@ -120,7 +123,7 @@ jobs:
           & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4.1.8
+        uses: actions/upload-artifact@v4
         with:
           name: AuroraShell-Windows
           path: AuroraShell-Installer.exe
@@ -130,10 +133,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
@@ -141,7 +144,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "build: update aurora system"
           title: "build: aurora-shell update"
-          body: "Automated build compiled on Node 24. Includes updated macOS PKG and Windows EXE."
+          body: |
+            Automated system build for Aurora Shell.
+            - Recompiled DMG and EXE using Node 24 environment.
+            - Verified installer script compatibility.
           branch: sys/build-update
           base: main
           delete-branch: true
