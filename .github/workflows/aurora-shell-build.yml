@@ -1,22 +1,23 @@
-name: Aurora-Shell Release Build
+name: Aurora-shell Release Build
 permissions:
   contents: write
   pull-requests: write
 
 on:
   push:
-    # Trigger on 'dev' to create a PR to 'main'
-    # Or use [ main ] temporarily if you are testing directly on your primary branch
-    branches: [ dev ] 
+    branches: [ dev ] # Push to 'dev' to trigger the PR to 'main'
   workflow_dispatch:
 
 env:
-  # The "Hammer" that forces all JS actions to use the Node 24 engine
+  # Forces all JavaScript actions to use the Node 24 engine
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   macos-build:
     runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -91,6 +92,9 @@ jobs:
 
   windows-build:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -103,6 +107,8 @@ jobs:
       - name: Build EXE with NSIS
         run: |
           choco install nsis -y
+          
+          # Create NSIS script using bash 'cat' for reliability
           cat > installer.nsi << 'EOF'
           !include "MUI2.nsh"
           Name "Aurora Shell"
@@ -117,10 +123,12 @@ jobs:
           Section "Install"
             SetOutPath "$INSTDIR"
             File "install.ps1"
-            ExecWait 'powershell -ExecutionPolicy Bypass -File "$INSTDIR\install.ps1"'
+            ExecWait 'powershell.exe -ExecutionPolicy Bypass -File "$INSTDIR\install.ps1"'
           SectionEnd
           EOF
-          & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi
+          
+          # Run the NSIS compiler
+          "/c/Program Files (x86)/NSIS/makensis.exe" installer.nsi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -142,7 +150,7 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "build: update aurora system"
+          commit-message: "build: update aurora system binaries"
           title: "build: aurora-shell update"
           body: |
             Automated system build for Aurora Shell.
