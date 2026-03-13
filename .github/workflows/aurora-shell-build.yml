@@ -1,4 +1,4 @@
-name: Aurora Release Build
+name: aurora-shell builds
 permissions:
   contents: write
   pull-requests: write
@@ -29,7 +29,7 @@ jobs:
       - name: Get Version
         id: version
         run: |
-          VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.5.1")
+          VERSION=$(grep "AURORA SYSTEM INSTALLER" install.sh | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || echo "v4.5.2")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Prepare Scripts
         run: |
@@ -37,16 +37,18 @@ jobs:
           cp install.sh build/scripts/postinstall
           chmod +x build/scripts/postinstall
       - name: Create Component PKG
+        # Forces the installer to target the User Home directory
         run: |
           pkgbuild --scripts build/scripts \
                    --identifier com.yashb.aurora \
                    --version ${{ steps.version.outputs.version }} \
+                   --install-location "$HOME/Library/AuroraShell" \
                    --nopayload \
                    build/AuroraShell-component.pkg
       - name: Create Final PKG
         run: |
-          productbuild --identifier com.yashb.aurora \
-                       --package-path build \
+          productbuild --package build/AuroraShell-component.pkg \
+                       --identifier com.yashb.aurora \
                        --version ${{ steps.version.outputs.version }} \
                        AuroraShell.pkg
       - name: Create DMG
@@ -109,8 +111,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Silence Node Warnings
         run: echo "::remove-matcher owner=node::"
-
-      # KEY FIX: Download BOTH so the bot can see them
       - name: Download macOS Artifact
         uses: actions/download-artifact@v4
         with:
@@ -121,14 +121,17 @@ jobs:
         with:
           name: AuroraShell-Windows
           path: .
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "build: update binaries for all platforms"
+          commit-message: "build: update aurora-shell binaries"
           title: "build: aurora-shell update (All Platforms)"
-          body: "Automated build compiled on Node 24. Includes both DMG and EXE."
+          body: |
+            Automated system build for Aurora Shell.
+            - macOS: PKG updated to Single-User installation scope.
+            - Windows: EXE installer recompiled for local app data.
+            - Node: Built on Node 24 with cleaned environment logs.
           branch: sys/build-update
           base: main
           delete-branch: true
