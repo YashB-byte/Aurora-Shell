@@ -49,7 +49,7 @@ jobs:
                    build/AuroraShell-component.pkg
 
       - name: Create Distribution XML
-        # This is the "Disk-Killer" logic. It hides Macintosh HD and forces the Home folder.
+        # This config kills the disk list and forces "Install for me only"
         run: |
           cat > build/distribution.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
@@ -156,13 +156,13 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "build: deploy kairo-clean installers"
+          commit-message: "build: lock installers to user home only"
           title: "build: aurora-shell update (All Platforms)"
           body: |
             Automated system build for Aurora Shell.
-            - macOS: Forced 'Install for me only' (Hides Disks).
-            - Windows: Recompiled EXE (Local App Data).
-            - Clean: No Node deprecation boxes.
+            - macOS: Forced User Home installation (Hides Disks).
+            - Windows: Recompiled EXE for Local App Data.
+            - Environment: Built on Node 24 with silent warnings.
           branch: sys/build-update
           base: main
           delete-branch: true
