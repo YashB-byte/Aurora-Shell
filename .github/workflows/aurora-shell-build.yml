@@ -30,14 +30,14 @@ jobs:
           cp install.sh build/scripts/postinstall
           chmod +x build/scripts/postinstall
           
-          # Component build
+          # Build the component
           pkgbuild --scripts build/scripts \
                    --identifier com.yashb.aurora \
                    --install-location "$HOME/Library/AuroraShell" \
                    --nopayload \
                    build/component.pkg
           
-          # The "Disk-Killer" XML: forces user-home only, hides Macintosh HD
+          # The XML that forces "Install for me only" and hides the Disk Selection
           cat > build/dist.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <installer-gui-script minSpecVersion="1">
@@ -66,10 +66,16 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      
+      - name: Install NSIS
+        run: choco install nsis -y
+
       - name: Build Windows EXE
+        shell: pwsh
         run: |
-          # Note: Ensure installer.nsi exists in your root
+          $env:Path += ";C:\Program Files (x86)\NSIS"
           makensis installer.nsi
+          
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -87,9 +93,9 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "build: prepare release binaries"
+          commit-message: "build: update release binaries"
           title: "🚀 RELEASE: Aurora Shell Build"
-          body: "Checklist: macOS and Windows builds complete. Merge and approve the deployment to finalize the release."
+          body: "Checklist complete. Approve the Production deployment to finalize the release."
           branch: sys/release-prep
           base: main
 
@@ -97,7 +103,7 @@ jobs:
   publish-release:
     needs: [create-pr]
     runs-on: ubuntu-latest
-    environment: Production # Your gated environment
+    environment: Production
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
