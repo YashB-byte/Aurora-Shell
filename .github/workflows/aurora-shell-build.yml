@@ -8,72 +8,39 @@ on:
     branches: [ dev ]
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   macos-build:
     runs-on: macos-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      - name: Terminal Branding
-        run: |
-          brew install figlet lolcat
-          figlet -f slant "aurora-shell" | lolcat
-          echo "Yash Behera ✨ ~ $"
+      - uses: actions/checkout@v4
       - name: Build macOS Installer
         run: |
           mkdir -p build/scripts
           cp install.sh build/scripts/postinstall
           chmod +x build/scripts/postinstall
-          pkgbuild --scripts build/scripts --identifier com.yashb.aurora --install-location "$HOME/Library/aurora-shell" --nopayload build/component.pkg
-          # ... (rest of your build logic)
-      - name: Upload macOS Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: aurora-shell-macOS
-          path: AuroraShell-macOS.dmg
+          pkgbuild --scripts build/scripts --identifier com.yashb.aurora --install-location "$HOME/.aurora-shell" --nopayload build/component.pkg
 
   windows-build:
     runs-on: windows-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Install NSIS
         run: choco install nsis -y
       - name: Build Windows EXE
         shell: pwsh
         run: |
+          # The critical fix for your previous error
           $env:Path += ";C:\Program Files (x86)\NSIS"
           makensis installer.nsi
-      - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: aurora-shell-Windows
-          path: AuroraShell-Installer.exe
 
-  create-pr:
+  publish-release:
     needs: [macos-build, windows-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "🚀 RELEASE: aurora-shell Build"
-          branch: sys/release-prep
-
-  publish-release:
-    needs: [create-pr]
-    runs-on: ubuntu-latest
-    environment: Production
-    steps:
-      - uses: actions/download-artifact@v4
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v4.5.8-b${{ github.run_number }}
+          tag_name: v4.5.8
           name: aurora-shell v4.5.8
-          files: |
-            aurora-shell-macOS/AuroraShell-macOS.dmg
-            aurora-shell-Windows/AuroraShell-Installer.exe
+          draft: false
+          prerelease: false
