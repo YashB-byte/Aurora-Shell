@@ -6,6 +6,7 @@ on:
     tags: [ 'v*' ]
 
 jobs:
+  # --- WINDOWS: Builds EXE and wraps in ZIP ---
   windows-build:
     runs-on: windows-latest
     steps:
@@ -25,36 +26,72 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
+  # --- MAC: Builds PKG and wraps in DMG ---
   unix-build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build DMG
+      - name: Build PKG and wrap in DMG
         run: |
           brew install create-dmg
-          mkdir -p dist
+          
+          # 1. Prepare PKG structure
+          mkdir -p pkg_root/usr/local/bin
           SCRIPT=$(find . -maxdepth 2 -iname "*install*.sh" | head -n 1)
-          cp "$SCRIPT" dist/
-          create-dmg --volname "Aurora-Shell" --window-size 500 300 "Aurora-Shell-Mac.dmg" "dist/"
+          cp "$SCRIPT" pkg_root/usr/local/bin/aurora-installer
+          chmod +x pkg_root/usr/local/bin/aurora-installer
+          
+          # 2. Create the PKG
+          pkgbuild --root pkg_root \
+                   --identifier com.aurora.shell \
+                   --version 1.2.0 \
+                   --install-location / \
+                   "Install-Aurora.pkg"
+          
+          # 3. Create DMG and put the PKG inside it
+          mkdir -p dmg_content
+          mv "Install-Aurora.pkg" dmg_content/
+          
+          create-dmg \
+            --volname "Aurora-Shell Installer" \
+            --window-pos 200 120 \
+            --window-size 600 450 \
+            --icon-size 100 \
+            --icon "Install-Aurora.pkg" 300 200 \
+            --hide-extension "Install-Aurora.pkg" \
+            "Aurora-Shell-Mac.dmg" \
+            "dmg_content/"
+
       - uses: actions/upload-artifact@v4
         with:
           name: mac-pkg
           path: ./*.dmg
 
+  # --- RELEASE: Requires Manual Approval in "Production" Environment ---
   publish-release:
     needs: [windows-build, unix-build]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    # THIS ENABLES THE APPROVAL BUTTON:
-    environment: Production
+    environment: Production  # <--- MUST create this in GitHub Settings!
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
-      - uses: softprops/action-gh-release@v2
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            **/*.zip
-            **/*.dmg
+            *.zip
+            *.dmg
+          body: |
+            ## 🌈 Aurora-Shell Official Release
+            - **Windows:** Download the `.zip`, extract, and run the `.exe`.
+            - **macOS:** Open the `.dmg` and double-click the `.pkg`.
+            
+            *Note: On macOS, right-click the .pkg and select 'Open' to bypass verification.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
