@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # --- WINDOWS: Direct to Repo Files ---
+  # --- WINDOWS: Clean & Direct ---
   windows-build:
     runs-on: windows-latest
     steps:
@@ -16,8 +16,7 @@ jobs:
       - name: Build EXE via NSIS
         run: |
           choco install nsis -y
-          # Points directly to the installer.nsi already in your repo root
-          # No wrapper created here.
+          # Runs your repo's installer.nsi directly
           & "C:\Program Files (x86)\NSIS\makensis.exe" /V3 installer.nsi
 
       - name: Create Zip
@@ -28,7 +27,7 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC: The Final Path Fix ---
+  # --- MAC: The "Absolute Path" Hardener ---
   unix-build:
     runs-on: macos-latest
     steps:
@@ -37,7 +36,7 @@ jobs:
       - name: Prepare macOS Scripts
         run: |
           mkdir -p scripts pkg_root
-          # postinstall acts as the trigger for your repo's install.sh
+          # Postinstall script to trigger your repo's install.sh
           cat <<EOF > scripts/postinstall
           #!/bin/bash
           /bin/bash "\$2/Contents/Resources/install.sh"
@@ -50,26 +49,26 @@ jobs:
         run: |
           brew install create-dmg
           
-          # 1. Build Component (the base layer)
-          pkgbuild --root pkg_root --scripts scripts --identifier com.aurora.shell.component --version "1.0.0" "Component.pkg"
+          # 1. Create the base component
+          pkgbuild --root pkg_root --scripts scripts --identifier com.aurora.shell.component "Component.pkg"
 
-          # 2. THE FIX: Explicitly linking the file URI
-          # This specifically targets the error in image_5a001e.jpg
-          CURRENT_DIR=$(pwd)
+          # 2. THE CRITICAL FIX: Direct absolute pathing
+          # This resolves the error in image_140e3d.jpg
+          ABS_PATH=$(pwd)
           cat <<EOF > distribution.xml
           <?xml version="1.0" encoding="utf-8"?>
           <installer-gui-script minSpecVersion="1">
-              <pkg-ref id="com.aurora.shell.component" file="file://localhost$CURRENT_DIR/Component.pkg" auth="none"/>
+              <pkg-ref id="com.aurora.shell.component" file="file://localhost$ABS_PATH/Component.pkg" auth="none"/>
               <domains enable_currentUserHome="true" />
               <choices-outline><line choice="default"/></choices-outline>
               <choice id="default" visible="false"><pkg-ref id="com.aurora.shell.component"/></choice>
           </installer-gui-script>
           EOF
 
-          # 3. Assemble final package
-          productbuild --distribution distribution.xml --package-path "$CURRENT_DIR" "Install-Aurora.pkg"
+          # 3. Productbuild with explicit search path
+          productbuild --distribution distribution.xml --package-path "$ABS_PATH" "Install-Aurora.pkg"
           
-          # 4. Wrap in DMG
+          # 4. DMG Wrap
           mkdir -p dmg_content && mv "Install-Aurora.pkg" dmg_content/
           create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" "dmg_content/"
 
