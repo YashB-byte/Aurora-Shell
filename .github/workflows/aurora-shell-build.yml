@@ -28,7 +28,7 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC BUILD: The Absolute Path Fix ---
+  # --- MAC BUILD: The 2026 Pathing Absolute Fix ---
   unix-build:
     runs-on: macos-latest
     steps:
@@ -38,7 +38,6 @@ jobs:
         run: |
           mkdir -p scripts
           cp ./installer.sh scripts/postinstall
-          # Ensure aurora_theme.sh exists to prevent build-stopping errors
           cp ./aurora_theme.sh scripts/ 2>/dev/null || touch scripts/aurora_theme.sh
           chmod +x scripts/postinstall
 
@@ -54,8 +53,8 @@ jobs:
                    --version "1.0.0" \
                    "Component.pkg"
 
-          # 2. THE FIX: Absolute Path Injection
-          # Captured dynamically to satisfy macOS 26.3.1 security/pathing
+          # 2. THE FIX: Create distribution.xml with an ABSOLUTE URL
+          # This tells macOS exactly where the file is on the runner's drive
           ABS_PATH=$(pwd)
           cat <<EOF > distribution.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -72,12 +71,12 @@ jobs:
           </installer-gui-script>
           EOF
 
-          # 3. Productbuild with explicit search path
+          # 3. Productbuild with explicit package-path
           productbuild --distribution distribution.xml \
                        --package-path . \
                        "Install-Aurora.pkg"
           
-          # 4. DMG Wrap-up
+          # 4. Wrap in DMG
           mkdir -p dmg_content
           mv "Install-Aurora.pkg" dmg_content/
           create-dmg \
