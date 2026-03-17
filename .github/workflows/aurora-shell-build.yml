@@ -11,61 +11,59 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # --- WINDOWS BUILD: Compiles NSIS Installer ---
+  # --- WINDOWS BUILD ---
   windows-build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Install NSIS
         run: choco install nsis -y
-
       - name: Build EXE
         shell: pwsh
         run: |
           $nsi = Get-ChildItem -Recurse -Filter "*.nsi" | Select-Object -First 1
-          if ($null -eq $nsi) { 
-            Write-Error "No .nsi file found in the repository. Build failed."
-            exit 1 
-          }
+          if ($null -eq $nsi) { exit 1 }
           & "C:\Program Files (x86)\NSIS\makensis.exe" /V3 $($nsi.FullName)
-
       - name: Create Zip
         shell: pwsh
         run: Compress-Archive -Path ./*.exe -DestinationPath ./Aurora-Shell-Windows.zip
-
-      - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC BUILD: Generates PKG and wraps in DMG ---
+  # --- MAC BUILD: Script Chain Execution ---
   unix-build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare Scripts for PKG
+        run: |
+          # 1. Create the scripts directory for pkgbuild
+          mkdir -p scripts
+          
+          # 2. Setup the chain: postinstall (installer.sh) -> install.sh
+          # We rename your installer.sh to 'postinstall' so Apple's Installer triggers it automatically.
+          cp ./installer.sh scripts/postinstall
+          cp ./install.sh scripts/install.sh
+          chmod +x scripts/postinstall scripts/install.sh
+
+          # 3. Create a dummy root (PKG needs a root folder even if empty)
+          mkdir -p pkg_root
+
       - name: Build PKG and wrap in DMG
         run: |
           brew install create-dmg
           
-          # 1. Prepare PKG structure for binary deployment
-          mkdir -p pkg_root/usr/local/bin
-          
-          # Note: This expects your compiled binary to be in the workspace.
-          # If your binary is named differently, update the 'cp' command below.
-          cp ./aurora pkg_root/usr/local/bin/ 2>/dev/null || touch pkg_root/usr/local/bin/aurora
-          chmod +x pkg_root/usr/local/bin/aurora
-          
-          # 2. Create the PKG
+          # Build the PKG including the scripts folder
           pkgbuild --root pkg_root \
+                   --scripts scripts \
                    --identifier com.aurora.shell \
                    --version ${{ github.ref_name || '1.0.0' }} \
-                   --install-location / \
+                   --install-location /tmp/aurora-temp \
                    "Install-Aurora.pkg"
           
-          # 3. Create DMG
           mkdir -p dmg_content
           mv "Install-Aurora.pkg" dmg_content/
           
@@ -77,13 +75,12 @@ jobs:
             "Aurora-Shell-Mac.dmg" \
             "dmg_content/"
 
-      - name: Upload Mac Artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: mac-pkg
           path: ./*.dmg
 
-  # --- RELEASE: Publishes to GitHub Releases ---
+  # --- RELEASE ---
   publish-release:
     needs: [windows-build, unix-build]
     if: startsWith(github.ref, 'refs/tags/')
@@ -96,7 +93,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
