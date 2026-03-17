@@ -23,7 +23,7 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC BUILD (User-Home Targeted) ---
+  # --- MAC BUILD (The #250 "Flat" Success Method) ---
   unix-build:
     runs-on: macos-latest
     steps:
@@ -31,36 +31,31 @@ jobs:
       - name: Prepare macOS Scripts
         run: |
           mkdir -p scripts pkg_root/.aurora-tmp
+          # Force extraction to user home via postinstall
           cat <<EOF > scripts/postinstall
           #!/bin/bash
-          # Extracts to user home and runs install.sh
-          /bin/bash "\$1/.aurora-tmp/install.sh"
-          rm -rf "\$1/.aurora-tmp"
+          # Determine destination
+          DEST_DIR="\$HOME/.aurora-shell"
+          mkdir -p "\$DEST_DIR"
+          # Copy files from the temporary payload
+          cp -R "\$2/Contents/Resources/.aurora-tmp/" "\$DEST_DIR/"
+          # Run the actual installer
+          /bin/bash "\$DEST_DIR/install.sh"
           exit 0
           EOF
           chmod +x scripts/postinstall
           cp ./install.sh pkg_root/.aurora-tmp/
       
-      - name: Build User-Level PKG
+      - name: Build Flat PKG
         run: |
           brew install create-dmg
-          # 1. Build the component
-          pkgbuild --root pkg_root --scripts scripts --identifier com.aurora.shell.installer --version "1.3.3" "Component.pkg"
-          
-          # 2. Distribution file for User-Home approval
-          cat <<EOF > distribution.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <installer-gui-script minSpecVersion="1">
-              <pkg-ref id="com.aurora.shell.installer"/>
-              <domains enable_currentUserHome="true" enable_anywhere="false" enable_localSystem="false"/>
-              <choices-outline><line choice="default"/></choices-outline>
-              <choice id="default" visible="false"><pkg-ref id="com.aurora.shell.installer"/></choice>
-          </installer-gui-script>
-          EOF
-
-          # 3. Final build with absolute path to bypass Build #249 errors
-          ABS_PATH=$(pwd)
-          productbuild --distribution distribution.xml --package-path "\$ABS_PATH" "Install-Aurora.pkg"
+          # pkgbuild alone creates a 'flat' package, bypassing the distribution.xml bugs
+          pkgbuild --root pkg_root \
+                   --scripts scripts \
+                   --identifier com.aurora.shell.installer \
+                   --version "1.3.3" \
+                   --install-location "/tmp/aurora-shell-payload" \
+                   "Install-Aurora.pkg"
           
           mkdir -p dmg_content && mv "Install-Aurora.pkg" dmg_content/
           create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" "dmg_content/"
@@ -70,12 +65,12 @@ jobs:
           name: mac-pkg
           path: ./*.dmg
 
-  # --- PUBLISH RELEASE (Requires Manual Approval) ---
+  # --- PUBLISH RELEASE (Approval Required) ---
   publish-release:
     needs: [windows-build, unix-build]
     if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    environment: 'Production' # This is the "Approve" Gate
+    environment: 'Production' # Manual Approval Step
     permissions:
       contents: write
     steps:
@@ -86,7 +81,6 @@ jobs:
       - name: Generate Changelog
         id: changelog
         run: |
-          # Grabs all commits since the last tag
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$PREVIOUS_TAG" ]; then
             CHANGES=$(git log --oneline -n 10)
@@ -107,17 +101,16 @@ jobs:
           files: |
             *.zip
             *.dmg
-          name: "Aurora-Shell v1.3.3"
+          name: "Aurora-Shell v${{ github.ref_name }}"
           body: |
             ## 🌈 Aurora-Shell Release
             **Version:** ${{ github.ref_name }}
-            **Build:** #${{ github.run_number }}
-
-            ### 📝 Changelog
+            
+            ### 📝 Changes in this version
             ${{ steps.changelog.outputs.log }}
-
+            
             ### 📦 Installation
-            * **Windows:** Extract the ZIP and run the EXE.
-            * **macOS:** Open the DMG and run the PKG (Select "Install for me only").
+            * **Windows:** Use the EXE inside the ZIP.
+            * **macOS:** Open DMG and run the PKG.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
