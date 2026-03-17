@@ -28,7 +28,7 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC BUILD: The Absolute Path Fix ---
+  # --- MAC BUILD: The Final Pathing Resolution ---
   unix-build:
     runs-on: macos-latest
     steps:
@@ -38,7 +38,7 @@ jobs:
         run: |
           mkdir -p scripts
           cp ./installer.sh scripts/postinstall
-          # Ensure aurora_theme.sh exists to prevent build-stopping errors
+          # Ensure theme is present to prevent build-stopping errors
           cp ./aurora_theme.sh scripts/ 2>/dev/null || touch scripts/aurora_theme.sh
           chmod +x scripts/postinstall
 
@@ -47,15 +47,15 @@ jobs:
           brew install create-dmg
           mkdir -p pkg_root
           
-          # 1. Component build
+          # 1. Build the sub-component
           pkgbuild --root pkg_root \
                    --scripts scripts \
                    --identifier com.aurora.shell.component \
                    --version "1.0.0" \
                    "Component.pkg"
 
-          # 2. THE FIX: Absolute Path Injection
-          # Captured dynamically to satisfy macOS security and pathing requirements
+          # 2. THE NUCLEAR FIX: Absolute Path Injection
+          # This converts the filename into a full file:// URL for the runner disk
           ABS_PATH=$(pwd)
           cat <<EOF > distribution.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -72,7 +72,7 @@ jobs:
           </installer-gui-script>
           EOF
 
-          # 3. Productbuild with explicit package-path mapping
+          # 3. Productbuild with explicit mapping
           productbuild --distribution distribution.xml \
                        --package-path . \
                        "Install-Aurora.pkg"
@@ -100,12 +100,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v2
         with:
           files: |
             *.zip
