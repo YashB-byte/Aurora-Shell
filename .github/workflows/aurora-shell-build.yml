@@ -28,7 +28,7 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC BUILD: The URI Fix ---
+  # --- MAC BUILD: Absolute Path Resolution ---
   unix-build:
     runs-on: macos-latest
     steps:
@@ -38,6 +38,7 @@ jobs:
         run: |
           mkdir -p scripts
           cp ./installer.sh scripts/postinstall
+          # Ensure aurora_theme.sh exists or create a dummy to prevent build failure
           cp ./aurora_theme.sh scripts/ 2>/dev/null || touch scripts/aurora_theme.sh
           chmod +x scripts/postinstall
 
@@ -46,15 +47,16 @@ jobs:
           brew install create-dmg
           mkdir -p pkg_root
           
-          # 1. Component build
+          # 1. Build the sub-component
           pkgbuild --root pkg_root \
                    --scripts scripts \
                    --identifier com.aurora.shell.component \
                    --version "1.0.0" \
                    "Component.pkg"
 
-          # 2. THE FIX: Absolute Path Injection
-          # This maps the exact file path on the runner disk
+          # 2. THE FIX: Dynamic URI Injection
+          # Using $(pwd) ensures productbuild finds the file on the runner
+          # auth="none" prevents the installer from asking for admin rights
           ABS_PATH=$(pwd)
           cat <<EOF > distribution.xml
           <?xml version="1.0" encoding="utf-8"?>
@@ -71,12 +73,12 @@ jobs:
           </installer-gui-script>
           EOF
 
-          # 3. Productbuild with specific search path mapping
+          # 3. Productbuild with explicit mapping
           productbuild --distribution distribution.xml \
                        --package-path . \
                        "Install-Aurora.pkg"
           
-          # 4. DMG Generation
+          # 4. Wrap in DMG
           mkdir -p dmg_content
           mv "Install-Aurora.pkg" dmg_content/
           create-dmg \
