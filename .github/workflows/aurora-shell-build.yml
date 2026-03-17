@@ -32,7 +32,7 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC BUILD: Script Chain Execution ---
+  # --- MAC BUILD: Remote Chain Execution ---
   unix-build:
     runs-on: macos-latest
     steps:
@@ -40,23 +40,18 @@ jobs:
 
       - name: Prepare Scripts for PKG
         run: |
-          # 1. Create the scripts directory for pkgbuild
           mkdir -p scripts
-          
-          # 2. Setup the chain: postinstall (installer.sh) -> install.sh
-          # We rename your installer.sh to 'postinstall' so Apple's Installer triggers it automatically.
+          # The installer.sh becomes the postinstall trigger
           cp ./installer.sh scripts/postinstall
-          cp ./install.sh scripts/install.sh
-          chmod +x scripts/postinstall scripts/install.sh
-
-          # 3. Create a dummy root (PKG needs a root folder even if empty)
-          mkdir -p pkg_root
+          # Include the theme file in the bundle so cp works
+          cp ./aurora_theme.sh scripts/ 2>/dev/null || touch scripts/aurora_theme.sh
+          chmod +x scripts/postinstall
 
       - name: Build PKG and wrap in DMG
         run: |
           brew install create-dmg
+          mkdir -p pkg_root # Dummy root
           
-          # Build the PKG including the scripts folder
           pkgbuild --root pkg_root \
                    --scripts scripts \
                    --identifier com.aurora.shell \
