@@ -4,58 +4,74 @@ on:
   push:
     branches: [ main, dev ]
     tags: [ 'v*' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  # --- WINDOWS: Builds EXE and wraps in ZIP ---
+  # --- WINDOWS BUILD: Generates EXE and ZIP ---
   windows-build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Install NSIS
         run: choco install nsis -y
+
       - name: Build EXE
         shell: pwsh
         run: |
+          # Automatically finds your .nsi script in the repo
           $nsi = Get-ChildItem -Recurse -Filter "*.nsi" | Select-Object -First 1
+          if ($null -eq $nsi) { 
+            Write-Host "❌ Error: No .nsi file found. Please include an NSIS script." -ForegroundColor Red
+            exit 1 
+          }
           & "C:\Program Files (x86)\NSIS\makensis.exe" /V3 $($nsi.FullName)
+
       - name: Create Zip
         shell: pwsh
         run: Compress-Archive -Path ./*.exe -DestinationPath ./Aurora-Shell-Windows.zip
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC: Builds PKG and wraps in DMG ---
+  # --- UNIX BUILD: Generates PKG and DMG ---
   unix-build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build PKG and wrap in DMG
+
+      - name: Build PKG and DMG
         run: |
           brew install create-dmg
           
-          # 1. Prepare PKG structure
+          # 1. Setup packaging root
           mkdir -p pkg_root/usr/local/bin
-          SCRIPT=$(find . -maxdepth 2 -iname "*install*.sh" | head -n 1)
+          
+          # 2. Find any .sh file to act as the installer/engine
+          SCRIPT=$(find . -maxdepth 2 -iname "*.sh" | head -n 1)
           cp "$SCRIPT" pkg_root/usr/local/bin/aurora-installer
           chmod +x pkg_root/usr/local/bin/aurora-installer
           
-          # 2. Create the PKG (The professional installer box)
+          # 3. Compile the Apple PKG
           pkgbuild --root pkg_root \
                    --identifier com.aurora.shell \
-                   --version 1.2.0 \
+                   --version ${{ github.ref_name }} \
                    --install-location / \
                    "Install-Aurora.pkg"
           
-          # 3. Create DMG and put the PKG inside it
+          # 4. Wrap in DMG
           mkdir -p dmg_content
           mv "Install-Aurora.pkg" dmg_content/
           
-          # Note: If you have an aurora-bg.png in your repo, 
-          # add --background "aurora-bg.png" to the command below.
           create-dmg \
-            --volname "Aurora-Shell Installer" \
+            --volname "Aurora-Shell" \
             --window-pos 200 120 \
             --window-size 600 450 \
             --icon-size 100 \
@@ -63,17 +79,19 @@ jobs:
             --hide-extension "Install-Aurora.pkg" \
             "Aurora-Shell-Mac.dmg" \
             "dmg_content/"
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload Mac Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: mac-pkg
           path: ./*.dmg
 
-  # --- RELEASE: Requires Manual Approval in "Production" Environment ---
+  # --- RELEASE: Deploys binaries to GitHub Releases ---
   publish-release:
     needs: [windows-build, unix-build]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    environment: Production  # CRITICAL: Create 'Production' in Settings > Environments
+    environment: Production
     permissions:
       contents: write
     steps:
@@ -85,14 +103,15 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          generate_release_notes: true
           files: |
             *.zip
             *.dmg
           body: |
             ## 🌈 Aurora-Shell Official Release
-            - **Windows:** Extract the `.zip` and run the `.exe` installer.
-            - **macOS:** Open the `.dmg` and double-click the `.pkg` installer.
+            Automated build for version ${{ github.ref_name }}.
             
-            *Tip: On macOS, right-click the .pkg and select 'Open' to bypass the developer warning.*
+            - **Windows:** Extract the `.zip` and run the `.exe`.
+            - **macOS:** Open the `.dmg` and run the `.pkg`.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
