@@ -28,7 +28,7 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC BUILD: The Final Pathing Fix ---
+  # --- MAC BUILD: Final Pathing Resolution ---
   unix-build:
     runs-on: macos-latest
     steps:
@@ -46,14 +46,15 @@ jobs:
           brew install create-dmg
           mkdir -p pkg_root
           
-          # 1. Component build
+          # 1. Build the sub-component
           pkgbuild --root pkg_root \
                    --scripts scripts \
                    --identifier com.aurora.shell.component \
                    --version "1.0.0" \
                    "Component.pkg"
 
-          # 2. Distribution XML with clean file reference
+          # 2. Generate Distribution XML
+          # We use a naked filename here because we will map the path in the next step
           cat <<EOF > distribution.xml
           <?xml version="1.0" encoding="utf-8"?>
           <installer-gui-script minSpecVersion="1">
@@ -69,13 +70,13 @@ jobs:
           </installer-gui-script>
           EOF
 
-          # 3. Productbuild using explicit package-path
-          # The '.' maps the XML's "Component.pkg" to the current directory
+          # 3. Use productbuild with explicit search path
+          # We use `pwd` to provide the absolute path to the current directory
           productbuild --distribution distribution.xml \
-                       --package-path . \
+                       --package-path "$(pwd)" \
                        "Install-Aurora.pkg"
           
-          # 4. Wrap in DMG
+          # 4. Create DMG
           mkdir -p dmg_content
           mv "Install-Aurora.pkg" dmg_content/
           create-dmg \
