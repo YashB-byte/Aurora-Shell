@@ -28,7 +28,7 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC BUILD: Final Pathing Resolution ---
+  # --- MAC BUILD: Absolute Path Resolution ---
   unix-build:
     runs-on: macos-latest
     steps:
@@ -38,6 +38,7 @@ jobs:
         run: |
           mkdir -p scripts
           cp ./installer.sh scripts/postinstall
+          # Ensure theme is present or create a dummy to prevent build failure
           cp ./aurora_theme.sh scripts/ 2>/dev/null || touch scripts/aurora_theme.sh
           chmod +x scripts/postinstall
 
@@ -46,19 +47,20 @@ jobs:
           brew install create-dmg
           mkdir -p pkg_root
           
-          # 1. Build the sub-component
+          # 1. Component build
           pkgbuild --root pkg_root \
                    --scripts scripts \
                    --identifier com.aurora.shell.component \
                    --version "1.0.0" \
                    "Component.pkg"
 
-          # 2. Generate Distribution XML
-          # We use a naked filename here because we will map the path in the next step
+          # 2. Generate Distribution XML using a dynamic absolute path
+          # This tells the engine exactly where to look on the runner's drive
+          CURRENT_DIR=$(pwd)
           cat <<EOF > distribution.xml
           <?xml version="1.0" encoding="utf-8"?>
           <installer-gui-script minSpecVersion="1">
-              <pkg-ref id="com.aurora.shell.component" file="Component.pkg" auth="none"/>
+              <pkg-ref id="com.aurora.shell.component" file="file://$CURRENT_DIR/Component.pkg" auth="none"/>
               <options customize="never" require-scripts="true" hostArchitectures="x86_64,arm64"/>
               <choices-outline>
                   <line choice="default"/>
@@ -70,13 +72,12 @@ jobs:
           </installer-gui-script>
           EOF
 
-          # 3. Use productbuild with explicit search path
-          # We use `pwd` to provide the absolute path to the current directory
+          # 3. Productbuild with explicit package-path mapping
           productbuild --distribution distribution.xml \
-                       --package-path "$(pwd)" \
+                       --package-path . \
                        "Install-Aurora.pkg"
           
-          # 4. Create DMG
+          # 4. Wrap in DMG
           mkdir -p dmg_content
           mv "Install-Aurora.pkg" dmg_content/
           create-dmg \
