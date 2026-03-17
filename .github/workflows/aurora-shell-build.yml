@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # --- WINDOWS: Keeping it simple as requested ---
+  # --- WINDOWS BUILD ---
   windows-build:
     runs-on: windows-latest
     steps:
@@ -23,45 +23,57 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC: Switching to Flat Package (Bypassing distribution.xml errors) ---
+  # --- MAC BUILD (The Failsafe Method) ---
   unix-build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      
       - name: Prepare macOS Scripts
         run: |
           mkdir -p scripts pkg_root
-          # postinstall trigger for your repo's install.sh
           cat <<EOF > scripts/postinstall
           #!/bin/bash
-          # Determine the directory where the package resources are extracted
           RESOURCE_DIR="\$2/Contents/Resources"
           /bin/bash "\$RESOURCE_DIR/install.sh"
           exit 0
           EOF
           chmod +x scripts/postinstall
           cp ./install.sh pkg_root/
-
       - name: Build User-Level PKG
         run: |
           brew install create-dmg
-          
-          # This command builds the installer WITHOUT a distribution.xml.
-          # It packs everything directly into the final .pkg file.
-          # This skips the 'pkg-ref' logic entirely, which fixed the error in image_1406ba.jpg.
           pkgbuild --root pkg_root \
                    --scripts scripts \
                    --identifier com.aurora.shell.installer \
                    --version "1.0.0" \
                    --install-location "/tmp/aurora-shell-install" \
                    "Install-Aurora.pkg"
-          
-          # Wrap the result in a DMG
           mkdir -p dmg_content && mv "Install-Aurora.pkg" dmg_content/
           create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" "dmg_content/"
-
       - uses: actions/upload-artifact@v4
         with:
           name: mac-pkg
           path: ./*.dmg
+
+  # --- PUBLISH RELEASE (Requires Approval) ---
+  publish-release:
+    needs: [windows-build, unix-build]
+    # Only runs on Tags (v1.0.0, etc.) or manual trigger
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: 'Production' # This triggers the "Approval" requirement in GitHub
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - name: Release to GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.zip
+            *.dmg
+          body: "## 🌈 Aurora-Shell Release [${{ github.ref_name }}]\n\nRelease generated from Build #${{ github.run_number }}."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
