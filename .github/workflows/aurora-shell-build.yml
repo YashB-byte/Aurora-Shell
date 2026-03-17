@@ -4,9 +4,14 @@ on:
   push:
     branches: [ main, dev ]
     tags: [ 'v*' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  # --- WINDOWS: Builds EXE and wraps in ZIP ---
+  # --- WINDOWS BUILD: Compiles NSIS Installer ---
   windows-build:
     runs-on: windows-latest
     steps:
@@ -17,6 +22,7 @@ jobs:
         shell: pwsh
         run: |
           $nsi = Get-ChildItem -Recurse -Filter "*.nsi" | Select-Object -First 1
+          if ($null -eq $nsi) { exit 1 }
           & "C:\Program Files (x86)\NSIS\makensis.exe" /V3 $($nsi.FullName)
       - name: Create Zip
         shell: pwsh
@@ -26,41 +32,61 @@ jobs:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC: Builds PKG and wraps in DMG ---
+  # --- MAC BUILD: Standard User-Level Package ---
   unix-build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build PKG and wrap in DMG
+
+      - name: Prepare Scripts
+        run: |
+          mkdir -p scripts
+          # installer.sh becomes the postinstall trigger
+          cp ./installer.sh scripts/postinstall
+          # Bundle the theme file so it's available to the postinstall script
+          cp ./aurora_theme.sh scripts/ 2>/dev/null || touch scripts/aurora_theme.sh
+          chmod +x scripts/postinstall
+
+      - name: Build User-Level PKG
         run: |
           brew install create-dmg
+          mkdir -p pkg_root # Payload root (installer.sh handles the work)
           
-          # 1. Prepare PKG structure
-          mkdir -p pkg_root/usr/local/bin
-          SCRIPT=$(find . -maxdepth 2 -iname "*install*.sh" | head -n 1)
-          cp "$SCRIPT" pkg_root/usr/local/bin/aurora-installer
-          chmod +x pkg_root/usr/local/bin/aurora-installer
-          
-          # 2. Create the PKG (The professional installer box)
+          # 1. Build Component
           pkgbuild --root pkg_root \
-                   --identifier com.aurora.shell \
-                   --version 1.2.0 \
-                   --install-location / \
-                   "Install-Aurora.pkg"
+                   --scripts scripts \
+                   --identifier com.aurora.shell.component \
+                   --version ${{ github.ref_name || '1.0.0' }} \
+                   "Component.pkg"
+
+          # 2. Generate Distribution XML (Optimized for 2026 local resolution)
+          cat <<EOF > distribution.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <installer-gui-script minSpecVersion="1">
+              <pkg-ref id="com.aurora.shell.component" file="file:./Component.pkg" auth="none"/>
+              <options customize="never" require-scripts="true" hostArchitectures="x86_64,arm64"/>
+              <choices-outline>
+                  <line choice="default"/>
+              </choices-outline>
+              <choice id="default" visible="false">
+                  <pkg-ref id="com.aurora.shell.component"/>
+              </choice>
+              <domains enable_anywhere="false" enable_currentUserHome="true" enable_localSystem="false"/>
+          </installer-gui-script>
+          EOF
+
+          # 3. Build Final Product PKG
+          productbuild --distribution distribution.xml \
+                       --package-path . \
+                       "Install-Aurora.pkg"
           
-          # 3. Create DMG and put the PKG inside it
+          # 4. Wrap in DMG
           mkdir -p dmg_content
           mv "Install-Aurora.pkg" dmg_content/
-          
-          # Note: If you have an aurora-bg.png in your repo, 
-          # add --background "aurora-bg.png" to the command below.
           create-dmg \
-            --volname "Aurora-Shell Installer" \
+            --volname "Aurora-Shell" \
             --window-pos 200 120 \
             --window-size 600 450 \
-            --icon-size 100 \
-            --icon "Install-Aurora.pkg" 300 200 \
-            --hide-extension "Install-Aurora.pkg" \
             "Aurora-Shell-Mac.dmg" \
             "dmg_content/"
 
@@ -69,12 +95,11 @@ jobs:
           name: mac-pkg
           path: ./*.dmg
 
-  # --- RELEASE: Requires Manual Approval in "Production" Environment ---
+  # --- RELEASE: Publishes to GitHub ---
   publish-release:
     needs: [windows-build, unix-build]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    environment: Production  # CRITICAL: Create 'Production' in Settings > Environments
     permissions:
       contents: write
     steps:
@@ -82,18 +107,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          generate_release_notes: true
           files: |
             *.zip
             *.dmg
-          body: |
-            ## 🌈 Aurora-Shell Official Release
-            - **Windows:** Extract the `.zip` and run the `.exe` installer.
-            - **macOS:** Open the `.dmg` and double-click the `.pkg` installer.
-            
-            *Tip: On macOS, right-click the .pkg and select 'Open' to bypass the developer warning.*
+          body: "## 🌈 Aurora-Shell Official Release [${{ github.ref_name }}]"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
