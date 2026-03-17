@@ -6,33 +6,25 @@ on:
     tags: [ 'v*' ]
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  # --- WINDOWS BUILD: Standard NSIS Compiling ---
+  # --- WINDOWS BUILD ---
   windows-build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install NSIS
-        run: choco install nsis -y
       - name: Build EXE
-        shell: pwsh
         run: |
+          choco install nsis -y
           $nsi = Get-ChildItem -Recurse -Filter "*.nsi" | Select-Object -First 1
-          if ($null -eq $nsi) { exit 1 }
           & "C:\Program Files (x86)\NSIS\makensis.exe" /V3 $($nsi.FullName)
       - name: Create Zip
-        shell: pwsh
         run: Compress-Archive -Path ./*.exe -DestinationPath ./Aurora-Shell-Windows.zip
       - uses: actions/upload-artifact@v4
         with:
           name: windows-pkg
           path: ./Aurora-Shell-Windows.zip
 
-  # --- MAC BUILD: User-Level Distribution (No Admin) ---
+  # --- MAC BUILD: The 2026 Pathing Fix ---
   unix-build:
     runs-on: macos-latest
     steps:
@@ -41,30 +33,27 @@ jobs:
       - name: Prepare Scripts
         run: |
           mkdir -p scripts
-          # installer.sh becomes the postinstall trigger for the PKG
           cp ./installer.sh scripts/postinstall
-          # Bundle theme file so the postinstall script can copy it locally
           cp ./aurora_theme.sh scripts/ 2>/dev/null || touch scripts/aurora_theme.sh
           chmod +x scripts/postinstall
 
       - name: Build User-Level PKG
         run: |
           brew install create-dmg
-          mkdir -p pkg_root # Dummy root for script-only package
+          mkdir -p pkg_root
           
-          # 1. Build the raw Component package
+          # 1. Build the raw component
           pkgbuild --root pkg_root \
                    --scripts scripts \
                    --identifier com.aurora.shell.component \
-                   --version ${{ github.ref_name || '1.0.0' }} \
+                   --version "1.0.0" \
                    "Component.pkg"
 
-          # 2. Generate 2026-Strict Distribution XML
-          # file:./ is required to resolve local files in macOS 26.3.1
+          # 2. Generate Distribution XML with explicit relative file path
           cat <<EOF > distribution.xml
           <?xml version="1.0" encoding="utf-8"?>
           <installer-gui-script minSpecVersion="1">
-              <pkg-ref id="com.aurora.shell.component" file="file:./Component.pkg" auth="none"/>
+              <pkg-ref id="com.aurora.shell.component" file="Component.pkg" auth="none"/>
               <options customize="never" require-scripts="true" hostArchitectures="x86_64,arm64"/>
               <choices-outline>
                   <line choice="default"/>
@@ -76,7 +65,8 @@ jobs:
           </installer-gui-script>
           EOF
 
-          # 3. Build Final PKG with explicit search path
+          # 3. Use productbuild with the --package-path set to the current directory
+          # This is the secret sauce that clears the "No URL" error in macOS 26.x
           productbuild --distribution distribution.xml \
                        --package-path . \
                        "Install-Aurora.pkg"
@@ -96,7 +86,7 @@ jobs:
           name: mac-pkg
           path: ./*.dmg
 
-  # --- RELEASE: Auto-Publishes to GitHub ---
+  # --- RELEASE ---
   publish-release:
     needs: [windows-build, unix-build]
     if: startsWith(github.ref, 'refs/tags/')
@@ -104,17 +94,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
           files: |
             *.zip
             *.dmg
-          body: "## 🌈 Aurora-Shell Official Release [${{ github.ref_name }}]"
+          body: "## 🌈 Aurora-Shell Release [${{ github.ref_name }}]"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
