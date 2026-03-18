@@ -2,115 +2,78 @@ name: Aurora-Shell CI/CD
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main ]
     tags: [ 'v*' ]
   workflow_dispatch:
 
 jobs:
-  # --- WINDOWS BUILD ---
   windows-build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build EXE via NSIS
+      - name: Build EXE
         run: |
           choco install nsis -y
-          & "C:\Program Files (x86)\NSIS\makensis.exe" /V3 installer.nsi
-      - name: Create Zip
-        run: Compress-Archive -Path ./*.exe -DestinationPath ./Aurora-Shell-Windows.zip
+          makensis /V3 installer.nsi
       - uses: actions/upload-artifact@v4
         with:
           name: windows-pkg
-          path: ./Aurora-Shell-Windows.zip
+          path: ./*.exe
 
-  # --- MAC BUILD (The #250 "Flat" Success Method) ---
   unix-build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare macOS Scripts
+      - name: Build Flat Package
         run: |
-          mkdir -p scripts pkg_root/.aurora-tmp
-          # Force extraction to user home via postinstall
+          mkdir -p scripts pkg_root
           cat <<EOF > scripts/postinstall
           #!/bin/bash
-          # Determine destination
-          DEST_DIR="\$HOME/.aurora-shell"
-          mkdir -p "\$DEST_DIR"
-          # Copy files from the temporary payload
-          cp -R "\$2/Contents/Resources/.aurora-tmp/" "\$DEST_DIR/"
-          # Run the actual installer
-          /bin/bash "\$DEST_DIR/install.sh"
+          /bin/bash "\$2/Contents/Resources/install.sh"
           exit 0
           EOF
           chmod +x scripts/postinstall
-          cp ./install.sh pkg_root/.aurora-tmp/
-      
-      - name: Build Flat PKG
-        run: |
+          cp ./install.sh pkg_root/
+          pkgbuild --root pkg_root --scripts scripts --identifier com.aurora.shell --version "5.3" --install-location "/tmp/aurora-payload" "Install-Aurora.pkg"
           brew install create-dmg
-          # pkgbuild alone creates a 'flat' package, bypassing the distribution.xml bugs
-          pkgbuild --root pkg_root \
-                   --scripts scripts \
-                   --identifier com.aurora.shell.installer \
-                   --version "1.3.3" \
-                   --install-location "/tmp/aurora-shell-payload" \
-                   "Install-Aurora.pkg"
-          
-          mkdir -p dmg_content && mv "Install-Aurora.pkg" dmg_content/
+          mkdir dmg_content && mv "Install-Aurora.pkg" dmg_content/
           create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" "dmg_content/"
-          
       - uses: actions/upload-artifact@v4
         with:
           name: mac-pkg
           path: ./*.dmg
 
-  # --- PUBLISH RELEASE (Approval Required) ---
   publish-release:
     needs: [windows-build, unix-build]
-    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    environment: 'Production' # Manual Approval Step
+    environment: 'Production' # Approval Gate
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Generate Changelog
         id: changelog
         run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$PREVIOUS_TAG" ]; then
-            CHANGES=$(git log --oneline -n 10)
-          else
-            CHANGES=$(git log ${PREVIOUS_TAG}..HEAD --oneline)
-          fi
+          PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          [ -z "$PREV" ] && LOG=$(git log --oneline -n 10) || LOG=$(git log ${PREV}..HEAD --oneline)
           echo "log<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGES" >> $GITHUB_OUTPUT
+          echo "$LOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-
-      - name: Create GitHub Release
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            *.zip
+            *.exe
             *.dmg
-          name: "Aurora-Shell v${{ github.ref_name }}"
           body: |
-            ## 🌈 Aurora-Shell Release
-            **Version:** ${{ github.ref_name }}
-            
-            ### 📝 Changes in this version
+            ## 🌈 Aurora-Shell v5.3
+            ### 📝 Changes
             ${{ steps.changelog.outputs.log }}
-            
-            ### 📦 Installation
-            * **Windows:** Use the EXE inside the ZIP.
-            * **macOS:** Open DMG and run the PKG.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
