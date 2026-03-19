@@ -14,6 +14,8 @@ jobs:
       - name: Build EXE
         run: |
           choco install nsis -y
+          # Fix: Add NSIS to PATH so makensis is recognized in this session
+          echo "C:\Program Files (x86)\NSIS" >> $GITHUB_PATH
           makensis /V3 installer.nsi
       - uses: actions/upload-artifact@v4
         with:
@@ -34,7 +36,7 @@ jobs:
           EOF
           chmod +x scripts/postinstall
           cp ./install.sh pkg_root/
-          pkgbuild --root pkg_root --scripts scripts --identifier com.aurora.shell --version "5.3" --install-location "/tmp/aurora-payload" "Install-Aurora.pkg"
+          pkgbuild --root pkg_root --scripts scripts --identifier com.aurora.shell --version "5.4.8" --install-location "/tmp/aurora-payload" "Install-Aurora.pkg"
           brew install create-dmg
           mkdir dmg_content && mv "Install-Aurora.pkg" dmg_content/
           create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" "dmg_content/"
@@ -47,7 +49,7 @@ jobs:
     needs: [windows-build, unix-build]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    environment: 'Production' # Approval Gate
+    environment: 'Production' 
     permissions:
       contents: write
     steps:
@@ -72,7 +74,7 @@ jobs:
             *.exe
             *.dmg
           body: |
-            ## 🌈 Aurora-Shell v5.3
+            ## 🌈 Aurora-Shell v5.4.8
             ### 📝 Changes
             ${{ steps.changelog.outputs.log }}
         env:
