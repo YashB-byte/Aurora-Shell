@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# --- AURORA-SHELL MASTER v5.4.9 ---
+# --- AURORA-SHELL MASTER v6.1.0 ---
 INSTALL_DIR="$HOME/.aurora-shell"
 CONFIG_FILE="$INSTALL_DIR/.aurora-shell_settings"
 THEME_FILE="$INSTALL_DIR/aurora_theme.sh"
@@ -63,7 +63,7 @@ fi
 
 # --- SAVE SETTINGS ---
 cat << EOF > "$CONFIG_FILE"
-AURORA_VER="5.4.9"
+AURORA_VER="6.1.0"
 AURORA_HEADER_TYPE="$HDR_TYPE"
 AURORA_HEADER_TEXT="$HDR_TEXT"
 AURORA_USER_BDAY="$BDAY"
