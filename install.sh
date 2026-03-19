@@ -128,7 +128,7 @@ rainbow_prompt() {
   SETTING_PATH="$HOME/.aurora-shell/.aurora-shell_settings"
   [ ! -f "$SETTING_PATH" ] && echo -n "Aurora > " && return
   source "$SETTING_PATH"
-  local text="${AURORA_ID} @ $(date +%H:%M:%S) > "
+  local text="${AURORA_ID} %n@%m $(date +%H:%M:%S) > "
   local colors=(196 202 226 190 82 46 48 51 45 39 27 21 57 93 129 165 201 199)
   local out=""
   for (( j=0; j<${#text}; j++ )); do
