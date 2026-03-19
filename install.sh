@@ -128,11 +128,17 @@ rainbow_prompt() {
   SETTING_PATH="$HOME/.aurora-shell/.aurora-shell_settings"
   [ ! -f "$SETTING_PATH" ] && echo -n "Aurora > " && return
   source "$SETTING_PATH"
+
+  # Expand the %n (user) and %m (host) into actual text first
   local raw_text="${AURORA_ID} %n@%m $(date +%H:%M:%S) > "
+  local expanded_text=$(print -P "$raw_text")
+
   local colors=(196 202 226 190 82 46 48 51 45 39 27 21 57 93 129 165 201 199)
   local out=""
-  for (( j=0; j<${#text}; j++ )); do
-    out+="%{%F{${colors[$(( (j % ${#colors}) + 1 ))]}}%}${text:$j:1}%{%f%}"
+  
+  # Apply the rainbow to the EXPANDED text
+  for (( j=0; j<${#expanded_text}; j++ )); do
+    out+="%{%F{${colors[$(( (j % ${#colors}) + 1 ))]}}%}${expanded_text:$j:1}%{%f%}"
   done
   echo -n "$out"
 }
