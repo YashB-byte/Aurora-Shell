@@ -11,6 +11,8 @@ REMOTE_URL="https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/ins
 mkdir -p "$INSTALL_DIR"
 
 # --- INITIAL INSTALLER SYNC ---
+
+echo "aurora-shell Version 5.7.0"
 sync_env() {
     echo -ne "\033[1;33m🛠️  Syncing Environment... \033[0m"
     if ! command -v brew &> /dev/null; then
