@@ -17,7 +17,7 @@ sync_env() {
         mkdir -p "$HOME/.brew" && curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C "$HOME/.brew"
         export PATH="$HOME/.brew/bin:$PATH"
     fi
-    brew install figlet lolcat pygments 2>/dev/null
+    brew install figlet lolcat pygments
     echo -e "\033[1;32mREADY\033[0m"
 }
 
