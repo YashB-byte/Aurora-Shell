@@ -9,32 +9,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  # --- 1. THE ENGINE: BUILD & VERIFY ---
   build-and-test:
-    name: Build & Verify (Win/Mac)
+    name: Build & Verify
     strategy:
+      # FIX: Prevents Windows failure from canceling the Mac build
+      fail-fast: false 
       matrix:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
-      # WINDOWS: Build EXE using stable Chocolatey install
+      # --- WINDOWS FIX ---
       - name: Build Windows EXE
         if: matrix.os == 'windows-latest'
         run: |
           choco install nsis -y
+          # FIX: Explicitly tell the runner where makensis lives
           echo "C:\Program Files (x86)\NSIS" >> $GITHUB_PATH
-          makensis /V3 installer.nsi
+          # Refreshing the path for the current shell
+          & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /V3 installer.nsi
 
-      # MACOS: Build User-Level DMG (No Sudo/Admin required)
-      - name: Build Mac DMG
+      # --- MACOS FIX ---
+      - name: Build Mac DMG (User-Level)
         if: matrix.os == 'macos-latest'
         run: |
           mkdir -p pkg_root
           cp ./install.sh pkg_root/
-          # Version is hardcoded here for the PKG metadata, update if needed
-          pkgbuild --root pkg_root --identifier com.aurora.shell --version "5.8.7" --install-location "$HOME/.aurora-shell" "Install-Aurora.pkg"
+          pkgbuild --root pkg_root --identifier com.aurora.shell --version "5.8.8" --install-location "$HOME/.aurora-shell" "Install-Aurora.pkg"
           brew install create-dmg
           mkdir dmg_content && mv "Install-Aurora.pkg" dmg_content/
           create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" "dmg_content/"
@@ -47,7 +49,6 @@ jobs:
             *.exe
             *.dmg
 
-  # --- 2. THE BRIDGE: DYNAMIC AUTO-PR ---
   create-pull-request:
     name: Create PR to Main
     needs: build-and-test
@@ -55,15 +56,11 @@ jobs:
     if: github.ref == 'refs/heads/dev'
     steps:
       - uses: actions/checkout@v4
-
-      # Automatically extract version from your code
-      - name: Get Version from Script
+      - name: Get Version
         id: get_ver
         run: |
-          # Finds VERSION="x.y.z" in your install script
           VER=$(grep -m 1 "VERSION=" install.sh | cut -d'"' -f2)
           echo "VERSION=$VER" >> $GITHUB_OUTPUT
-
       - name: Open PR
         uses: peter-evans/create-pull-request@v6
         with:
@@ -71,34 +68,26 @@ jobs:
           branch: dev
           base: main
           title: "🚀 Production Ready (v${{ steps.get_ver.outputs.VERSION }})"
-          body: "Builds passed on Windows and macOS. Version ${{ steps.get_ver.outputs.VERSION }} is verified and ready for main."
+          body: "Verification complete for v${{ steps.get_ver.outputs.VERSION }}."
 
-  # --- 3. THE GATE: PRODUCTION RELEASE ---
   publish-release:
     name: Request Production Release
     needs: build-and-test
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    
-    # This job triggers the "Review Required" button in GitHub Actions
     environment: Production
-    
     permissions:
       contents: write
-      
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-          
-      - name: Create GitHub Release
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             *.exe
             *.dmg
-          # Body uses the actual tag name (e.g., v1.3.4)
-          body: "Official Aurora-Shell Release ${{ github.ref_name }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
