@@ -2,101 +2,92 @@ name: Aurora-Shell CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dev, main ]
     tags: [ 'v*' ]
   pull_request:
-    branches: [ main ] # This triggers the builds (but not the release) on every PR
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
-  # --- TEST & BUILD PHASE ---
-  windows-build:
-    name: Windows EXE Build
-    runs-on: windows-latest
+  # --- 1. THE BUILD ENGINE ---
+  build-and-test:
+    name: Build & Verify
+    strategy:
+      fail-fast: false 
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install NSIS
+
+      # WINDOWS: Direct path execution to avoid "command not found"
+      - name: Build Windows EXE
+        if: matrix.os == 'windows-latest'
         run: |
           choco install nsis -y
-          echo "C:\Program Files (x86)\NSIS" >> $env:GITHUB_PATH
+          & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /V3 installer.nsi
 
-      - name: Build EXE
+      # MACOS: User-level DMG (No password required)
+      - name: Build Mac DMG
+        if: matrix.os == 'macos-latest'
         run: |
-          makensis /V3 installer.nsi
-          
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-exe
-          path: ./*.exe
-
-  unix-build:
-    name: Unix/macOS Build
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Build DMG
-        run: |
-          mkdir -p scripts pkg_root
-          cat <<EOF > scripts/postinstall
-          #!/bin/bash
-          /bin/bash "\$2/Contents/Resources/install.sh"
-          exit 0
-          EOF
-          chmod +x scripts/postinstall
+          mkdir -p pkg_root
           cp ./install.sh pkg_root/
-          
-          pkgbuild --root pkg_root --scripts scripts --identifier com.aurora.shell --version "5.7.6" --install-location "/tmp/aurora-payload" "Install-Aurora.pkg"
-          
+          pkgbuild --root pkg_root --identifier com.aurora.shell --version "5.9.1" --install-location "$HOME/.aurora-shell" "Install-Aurora.pkg"
           brew install create-dmg
           mkdir dmg_content && mv "Install-Aurora.pkg" dmg_content/
           create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" "dmg_content/"
-          
-      - uses: actions/upload-artifact@v4
-        with:
-          name: mac-pkg
-          path: ./*.dmg
 
-  # --- RELEASE PHASE (Only runs on Tags) ---
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-build
+          path: |
+            *.exe
+            *.dmg
+
+  # --- 2. THE BRIDGE: AUTO-PR ---
+  create-pull-request:
+    name: Create PR to Main
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    # Triggers on both dev branch pushes AND tags pushed to dev
+    if: github.ref == 'refs/heads/dev' || startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get Version
+        id: get_ver
+        run: |
+          VER=$(grep -m 1 "VERSION=" install.sh | cut -d'"' -f2)
+          echo "VERSION=$VER" >> $GITHUB_OUTPUT
+      - name: Open PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: dev
+          base: main
+          title: "🚀 Production Ready (v${{ steps.get_ver.outputs.VERSION }})"
+          body: "Verification complete for v${{ steps.get_ver.outputs.VERSION }}. Built on Windows and macOS."
+
+  # --- 3. THE GATE: PRODUCTION RELEASE ---
   publish-release:
-    name: Create GitHub Release
-    needs: [windows-build, unix-build]
-    # This condition ensures releases only happen on actual version tags, not PRs
+    name: Request Production Release
+    needs: build-and-test
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
+    environment: Production
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          
-      - name: Generate Changelog
-        id: changelog
-        run: |
-          PREV=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -z "$PREV" ]; then
-            LOG=$(git log --oneline -n 10)
-          else
-            LOG=$(git log ${PREV}..HEAD --oneline)
-          fi
-          echo "log<<EOF" >> $GITHUB_OUTPUT
-          echo "$LOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-          
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             *.exe
             *.dmg
-          body: |
-            ## 🌈 Aurora-Shell v5.7.6
-            ${{ steps.changelog.outputs.log }}
+          body: "🌈 Official Aurora-Shell Release ${{ github.ref_name }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
