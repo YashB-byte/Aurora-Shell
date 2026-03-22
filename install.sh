@@ -1,7 +1,7 @@
 #!/bin/bash
-# --- AURORA-SHELL MASTER v5.8.3 ---
-# VERSION: 5.8.3
-# FIX: VS Code Env Resilience + Strict Hidden Pathing + Branch-Aware Sync
+# --- AURORA-SHELL MASTER v5.8.6 ---
+# VERSION: 5.8.6
+# FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
 DATA_DIR="$HOME/.aurora-shell_files"
@@ -9,19 +9,16 @@ THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 
-# Initialize directory and purge old theme for a clean overwrite
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
 
 # --- SYNC ENVIRONMENT ---
 sync_env() {
     echo -ne "\033[1;33m🛠️  Syncing Environment... \033[0m"
-    # Silent brew check/install
     if ! command -v brew &> /dev/null; then
         mkdir -p "$HOME/.brew" && curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C "$HOME/.brew"
         export PATH="$HOME/.brew/bin:$PATH"
     fi
-    # Ensure dependencies are present for the "Mega-Block" look
     brew install figlet lolcat 2>/dev/null
     echo -e "\033[1;32mREADY\033[0m"
 }
@@ -35,17 +32,15 @@ run_wizard() {
     echo "🎨 1) Mega-Block 2) Custom Slant"
     read -p "Selection: " choice < /dev/tty
     if [ "$choice" == "2" ]; then 
-        HDR_MODE="CUSTOM"
-        read -p "✍️ Header Name: " HDR_VAL < /dev/tty
+        HDR_MODE="CUSTOM"; read -p "✍️ Header Name: " HDR_VAL < /dev/tty
     else 
-        HDR_MODE="BLOCK"
-        HDR_VAL="Aurora-Shell"
+        HDR_MODE="BLOCK"; HDR_VAL="Aurora-Shell"
     fi
     read -p "🎂 Birthday (MMDD): " BDAY < /dev/tty
     read -p "🆔 Prompt ID: " P_ID < /dev/tty
 
     cat << EOF > "$CONFIG_FILE"
-AURORA_VER="5.8.3"
+AURORA_VER="5.8.6"
 AURORA_PW="${NEW_PW:-$AURORA_PW}"
 AURORA_HDR_MODE="$HDR_MODE"
 AURORA_HDR_VAL="$HDR_VAL"
@@ -62,38 +57,34 @@ generate_theme() {
 source "$HOME/.aurora-shell_files/aurora-shell_settings"
 
 # -- VS CODE ALIAS ENGINE --
-# Scans both System and User applications
 find_vscode() {
-    local locs=(
-        "/Applications/Visual Studio Code.app"
-        "$HOME/Applications/Visual Studio Code.app"
-        "/Applications/Visual Studio Code - Insiders.app"
-        "$HOME/Applications/Visual Studio Code - Insiders.app"
-    )
+    local locs=("/Applications/Visual Studio Code.app" "$HOME/Applications/Visual Studio Code.app" "/Applications/Visual Studio Code - Insiders.app" "$HOME/Applications/Visual Studio Code - Insiders.app")
     for loc in $locs; do
         if [ -d "$loc" ]; then
             alias code="$loc/Contents/Resources/app/bin/code"
-            return 0
+            break
         fi
     done
 }
 find_vscode
 
 # -- HELPER: SAFE LOLCAT --
-# Prevents shell crash if lolcat isn't in PATH yet
 safe_lolcat() {
-    if command -v lolcat &> /dev/null; then
-        command lolcat
-    else
-        cat
-    fi
+    if command -v lolcat &> /dev/null; then command lolcat; else cat; fi
 }
 
 authenticate_user() {
     local target_pw="${1:-$AURORA_PW}"
     [[ -z "$target_pw" ]] && return
     clear
-    echo "       [ SYSTEM ENCRYPTED ]" | safe_lolcat
+    echo "          .---.
+          /     \\
+         | (00)  |  SYSTEM ENCRYPTED
+          \\  ^  /
+           '---'
+     ╔════════════════════════════════════════╗
+     ║     AURORA-SHELL SECURITY TERMINAL     ║
+     ╚════════════════════════════════════════╝" | safe_lolcat
     while true; do
         echo -ne "\033[1;36m[AUTH] Key: \033[0m"; read -s in_pw; echo ""
         [[ "$in_pw" == "$target_pw" ]] && { clear; break; } || echo -e "\033[1;41m DENIED \033[0m"
@@ -124,7 +115,7 @@ Show-Aurora() {
         content=$(figlet -f slant "$AURORA_HDR_VAL")
     fi
 
-    # Centering Logic
+    # Centering Header
     local max_w=0
     while IFS= read -r line; do
         (( ${#line} > max_w )) && max_w=${#line}
@@ -136,18 +127,34 @@ Show-Aurora() {
         printf "%${pad}s%s\n" "" "$line"
     done <<< "$content" | safe_lolcat
 
-    echo -e "\n\033[1;34m⚡ AURORA v$AURORA_VER | 🔋 $(pmset -g batt | grep -Eo '[0-9]+%' | head -1) | 📅 $(date +'%D')\033[0m"
+    # --- TELEMETRY ---
+    local cpu_load=$(top -l 1 | grep "CPU usage" | awk '{print $3}' | sed 's/%//')
+    local disk_free=$(df -h / | tail -1 | awk '{print $4}')
+    local batt=$(pmset -g batt | grep -Eo '[0-9]+%' | head -1 || echo "100%")
+    
+    local stats="⚡ AURORA v$AURORA_VER | 🧠 CPU: ${cpu_load}% | 💾 FREE: $disk_free | 🔋 $batt | 📅 $(date +'%D')"
+    local s_pad=$(( (cols - ${#stats}) / 2 ))
+    [[ $s_pad -lt 0 ]] && s_pad=0
+    printf "%${s_pad}s\033[1;34m%s\033[0m\n" "" "$stats"
+
+    # --- THE SEPARATOR DASH LINE ---
+    local line_str=""
+    for ((i=1; i<=$cols; i++)); do line_str+="-"; done
+    echo "$line_str" | safe_lolcat
 }
 
 shell.aurora() {
     case "$1" in
+        --display) Show-Aurora ;;
+        --sys) sw_vers && sysctl -n machdep.cpu.brand_string ;;
         --update)
             local branch="${2:-main}"
             bash <(curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell/$branch/install.sh")
             ;;
         --config) code "$HOME/.aurora-shell_files/aurora-shell_settings" ;;
+        --lock) authenticate_user "MANUAL" && Show-Aurora ;;
         --uninstall) rm -rf "$HOME/.aurora-shell_files" && sed -i '' '/aurora-shell_theme/d' ~/.zshrc ;;
-        *) echo "Flags: --update [branch], --config, --uninstall" ;;
+        *) echo "Flags: --display, --sys, --update [branch], --config, --lock, --uninstall" ;;
     esac
 }
 alias aurora="shell.aurora"
@@ -175,8 +182,7 @@ sync_env
 run_wizard
 generate_theme
 
-# Clean .zshrc and link the internal theme
 sed -i '' '/aurora-shell_theme/d' ~/.zshrc 2>/dev/null
 echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
-echo -e "\n\033[1;32m✅ v5.8.3 Deployed. Mega-Block aesthetic restored.\033[0m"
+echo -e "\n\033[1;32m✅ v5.8.6 Deployed. Security Terminal Visuals Updated.\033[0m"
