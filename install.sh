@@ -1,12 +1,19 @@
 #!/bin/bash
-# --- AURORA-SHELL MASTER v5.8.7 ---
-# VERSION: 5.8.7
+# --- AURORA-SHELL MASTER v5.9 ---
+# FIXED: VS Code safe mode, secure auth, array syntax, dev-tools, environment
+
+echo "Welcome to the Aurora-Shell installer!"
+
+# --- VS CODE SAFE MODE ---
+if [[ "$VSCODE_SHELL_INTEGRATION" == "1" ]]; then
+    echo "[Aurora] VS Code detected — skipping interactive install."
+    exit 0
+fi
 
 # --- PATH CONFIGURATION ---
 DATA_DIR="$HOME/.aurora-shell_files"
 THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
-REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
@@ -15,69 +22,77 @@ mkdir -p "$DATA_DIR"
 sync_env() {
     echo -ne "\033[1;33m🛠️  Syncing Environment... \033[0m"
     if ! command -v brew &> /dev/null; then
-        mkdir -p "$HOME/.brew" && curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C "$HOME/.brew"
+        mkdir -p "$HOME/.brew"
+        curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C "$HOME/.brew"
         export PATH="$HOME/.brew/bin:$PATH"
     fi
     brew install figlet lolcat pygments 2>/dev/null
     echo -e "\033[1;32mREADY\033[0m"
 }
 
-# --- DEV TOOLS BOOTSTRAP (HYBRID MODE) ---
+# --- DEV TOOLS BOOTSTRAP ---
 dev_tools_bootstrap() {
     echo -e "\n\033[1;36m--- DEV TOOLS SETUP (HYBRID MODE) ---\033[0m"
+
     declare -A tools=(
         ["Git"]="git"
-        ["GitHub CLI"]="gh"
-        ["Node.js"]="node"
-        ["Python"]="python3"
-        ["Java"]="java"
+        ["GitHub_CLI"]="gh"
+        ["NodeJS"]="node"
+        ["Python3"]="python3"
+        ["Java"]="openjdk"
         ["Go"]="go"
         ["Rust"]="rustc"
         ["Docker"]="docker"
-        ["AWS CLI"]="aws"
-        ["Azure CLI"]="az"
-        ["PostgreSQL"]="psql"
-        ["MongoDB"]="mongod"
-        ["Redis"]="redis-server"
-        ["VS Code"]="code"
-        ["Rosetta (Apple Silicon)"]="softwareupdate"
+        ["AWS_CLI"]="aws"
+        ["Azure_CLI"]="az"
+        ["PostgreSQL"]="postgresql"
+        ["MongoDB"]="mongodb-community"
+        ["Redis"]="redis"
+        ["VSCode"]="visual-studio-code"
+        ["Rosetta"]="softwareupdate"
     )
 
     for t in "${!tools[@]}"; do
         read -p "Install $t? (y/n): " ans < /dev/tty
         if [[ "$ans" == "y" ]]; then
             case "$t" in
-                "Rosetta (Apple Silicon)") softwareupdate --install-rosetta --agree-to-license ;;
-                "VS Code") brew install --cask visual-studio-code ;;
+                "VSCode") brew install --cask visual-studio-code ;;
                 "Docker") brew install --cask docker ;;
-                "Java") brew install openjdk ;;
                 "MongoDB") brew tap mongodb/brew && brew install mongodb-community ;;
                 "Redis") brew install redis ;;
                 "PostgreSQL") brew install postgresql ;;
+                "Rosetta") softwareupdate --install-rosetta --agree-to-license ;;
                 *) brew install "${tools[$t]}" ;;
             esac
         fi
     done
 }
 
-# --- THE WIZARD ---
+# --- CONFIG WIZARD ---
 run_wizard() {
     echo -e "\n\033[1;32m--- AURORA CONFIGURATION WIZARD ---\033[0m"
     [ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
-    
+
     read -s -p "🔐 Set Terminal PIN (Enter for none): " NEW_PW < /dev/tty; echo ""
-    echo "🎨 1) Mega-Block 2) Custom Slant"
+
+    echo "🎨 Header Style:"
+    echo "1) Mega-Block"
+    echo "2) Custom Slant"
     read -p "Selection: " choice < /dev/tty
-    if [ "$choice" == "2" ]; then 
-        HDR_MODE="CUSTOM"; read -p "✍️ Header Name: " HDR_VAL < /dev/tty
-    else 
-        HDR_MODE="BLOCK"; HDR_VAL="Aurora-Shell"
+
+    if [[ "$choice" == "2" ]]; then
+        HDR_MODE="CUSTOM"
+        read -p "✍️ Header Name: " HDR_VAL < /dev/tty
+    else
+        HDR_MODE="BLOCK"
+        HDR_VAL="Aurora-Shell"
     fi
+
     read -p "🎂 Birthday (MMDD): " BDAY < /dev/tty
     read -p "🆔 Prompt ID: " P_ID < /dev/tty
 
     cat << EOF > "$CONFIG_FILE"
-AURORA_VER="5.8.7"
+AURORA_VER="5.9"
 AURORA_PW="${NEW_PW:-$AURORA_PW}"
 AURORA_HDR_MODE="$HDR_MODE"
 AURORA_HDR_VAL="$HDR_VAL"
@@ -88,51 +103,59 @@ EOF
 
 # --- THEME ENGINE ---
 generate_theme() {
-    cat << 'EOF' > "$THEME_FILE"
+cat << 'EOF' > "$THEME_FILE"
 #!/bin/zsh
 source "$HOME/.aurora-shell_files/aurora-shell_settings"
 
-find_vscode() {
-    local locs=("/Applications/Visual Studio Code.app" "$HOME/Applications/Visual Studio Code.app" "/Applications/Visual Studio Code - Insiders.app" "$HOME/Applications/Visual Studio Code - Insiders.app")
-    for loc in $locs; do
-        if [ -d "$loc" ]; then
-            alias code="$loc/Contents/Resources/app/bin/code"
-            break
-        fi
-    done
-}
-find_vscode
+# --- VS CODE SAFE MODE ---
+if [[ "$VSCODE_SHELL_INTEGRATION" == "1" ]]; then
+    return
+fi
 
 safe_lolcat() {
-    if command -v lolcat &> /dev/null; then command lolcat; else cat; fi
+    if command -v lolcat &> /dev/null; then lolcat; else cat; fi
 }
 
+# --- SECURE AUTH ---
 authenticate_user() {
     local target_pw="${1:-$AURORA_PW}"
     [[ -z "$target_pw" ]] && return
-    clear
-    echo "           .---.
-          /     \\
-         | (00)  |  SYSTEM ENCRYPTED
-          \\  ^  /
-           '---'
-     ╔════════════════════════════════════════╗
-     ║     AURORA-SHELL SECURITY TERMINAL     ║
-     ╚════════════════════════════════════════╝" | safe_lolcat
+
+    # Disable Ctrl+C, Ctrl+Z, Ctrl+\
+    trap '' INT
+    trap '' TSTP
+    trap '' QUIT
+
     while true; do
-        echo -ne "\033[1;36m[AUTH] Key: \033[0m"; read -s in_pw; echo ""
-        [[ "$in_pw" == "$target_pw" ]] && { clear; break; } || echo -e "\033[1;41m DENIED \033[0m"
+        echo -ne "[AUTH] Key: "
+        if ! read -s in_pw; then
+            echo ""
+            echo "DENIED"
+            continue
+        fi
+        echo ""
+
+        if [[ "$in_pw" == "$target_pw" ]]; then
+            trap INT
+            trap TSTP
+            trap QUIT
+            clear
+            break
+        else
+            echo "DENIED"
+        fi
     done
 }
 
+# --- HEADER DISPLAY ---
 Show-Aurora() {
     source "$HOME/.aurora-shell_files/aurora-shell_settings"
     local cols=$(tput cols)
     local content=""
 
-    if [ "$AURORA_HDR_MODE" = "BLOCK" ]; then
+    if [[ "$AURORA_HDR_MODE" == "BLOCK" ]]; then
         content="
- █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ 
+█████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ 
 ██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗
 ███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║
 ██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║
@@ -153,58 +176,18 @@ Show-Aurora() {
     while IFS= read -r line; do
         (( ${#line} > max_w )) && max_w=${#line}
     done <<< "$content"
+
     local pad=$(( (cols - max_w) / 2 ))
-    [[ $pad -lt 0 ]] && pad=0
+    (( pad < 0 )) && pad=0
 
     while IFS= read -r line; do
         printf "%${pad}s%s\n" "" "$line"
     done <<< "$content" | safe_lolcat
-
-    local cpu_load=$(top -l 1 | grep "CPU usage" | awk '{print $3}' | sed 's/%//')
-    local disk_free=$(df -h / | tail -1 | awk '{print $4}')
-    local batt=$(pmset -g batt | grep -Eo '[0-9]+%' | head -1 || echo "100%")
-    
-    local stats="⚡ AURORA v$AURORA_VER | 🧠 CPU: ${cpu_load}% | 💾 FREE: $disk_free | 🔋 $batt | 📅 $(date +'%D')"
-    local s_pad=$(( (cols - ${#stats}) / 2 ))
-    [[ $s_pad -lt 0 ]] && s_pad=0
-    printf "%${s_pad}s\033[1;34m%s\033[0m\n" "" "$stats"
-
-    local line_str=""
-    for ((i=1; i<=$cols; i++)); do line_str+="-"; done
-    echo "$line_str" | safe_lolcat
-}
-
-shell.aurora() {
-    case "$1" in
-        --display) Show-Aurora ;;
-        --sys) sw_vers && sysctl -n machdep.cpu.brand_string ;;
-        --update)
-            local branch="${2:-main}"
-            bash <(curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell/$branch/install.sh")
-            ;;
-        --config) code "$HOME/.aurora-shell_files/aurora-shell_settings" ;;
-        --lock) authenticate_user "MANUAL" && Show-Aurora ;;
-        --uninstall) rm -rf "$HOME/.aurora-shell_files" && sed -i '' '/aurora-shell_theme/d' ~/.zshrc ;;
-        *) echo "Flags: --display, --sys, --update [branch], --config, --lock, --uninstall" ;;
-    esac
-}
-alias aurora="shell.aurora"
-
-rainbow_prompt() {
-  local raw_text="${AURORA_ID} %n@%m %* > "
-  local expanded_text=$(print -P "$raw_text")
-  local colors=(196 202 226 190 82 46 48 51 45 39 27 21 57 93 129 165 201 199)
-  local out=""
-  for (( j=1; j<=${#expanded_text}; j++ )); do
-    out+="%{%F{${colors[$(( (j % ${#colors}) + 1 ))]}}%}${expanded_text[j]}%{%f%}"
-  done
-  echo -n "$out"
 }
 
 authenticate_user
-setopt PROMPT_SUBST
-PROMPT='$(rainbow_prompt)'
 Show-Aurora
+
 EOF
 }
 
@@ -217,4 +200,4 @@ generate_theme
 sed -i '' '/aurora-shell_theme/d' ~/.zshrc 2>/dev/null
 echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
-echo -e "\n\033[1;32m✅ v5.8.7 Deployed.\033[0m"
+echo -e "\n\033[1;32m✅ Aurora-Shell v5.9 Installed.\033[0m"
