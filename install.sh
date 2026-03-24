@@ -1,6 +1,6 @@
 #!/bin/bash
-# --- AURORA-SHELL MASTER v5.9 ---
-# FIXED: VS Code safe mode, secure auth, dev-tools (POSIX), environment
+# --- AURORA-SHELL MASTER v6.0 ---
+# Bash-only, VS Code safe, POSIX-safe dev tools, hardened theme install
 
 echo "Welcome to the Aurora-Shell installer!"
 
@@ -21,16 +21,16 @@ mkdir -p "$DATA_DIR"
 # --- SYNC ENVIRONMENT ---
 sync_env() {
     echo -ne "\033[1;33m🛠️  Syncing Environment... \033[0m"
-    if ! command -v brew &> /dev/null; then
+    if ! command -v brew >/dev/null 2>&1; then
         mkdir -p "$HOME/.brew"
         curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C "$HOME/.brew"
         export PATH="$HOME/.brew/bin:$PATH"
     fi
-    brew install figlet lolcat pygments 2>/dev/null
+    brew install figlet lolcat pygments >/dev/null 2>&1
     echo -e "\033[1;32mREADY\033[0m"
 }
 
-# --- DEV TOOLS BOOTSTRAP (NO ASSOCIATIVE ARRAYS) ---
+# --- DEV TOOLS BOOTSTRAP (BASH 3.2 SAFE) ---
 dev_tools_bootstrap() {
     echo -e "\n\033[1;36m--- DEV TOOLS SETUP (HYBRID MODE) ---\033[0m"
 
@@ -38,44 +38,29 @@ dev_tools_bootstrap() {
         "Git:git"
         "GitHub_CLI:gh"
         "NodeJS:node"
-        "Python3:python3"
+        "Python3:python@3.14"
         "Java:openjdk"
         "Go:go"
-        "Rust:rustc"
-        "Docker:docker"
-        "AWS_CLI:aws"
-        "Azure_CLI:az"
-        "PostgreSQL:postgresql"
-        "MongoDB:mongodb-community"
-        "Redis:redis"
-        "VSCode:visual-studio-code"
-        "Rosetta:rosetta"
+        "Rust:rust"
+        "Docker:docker-desktop"
+        "AWS_CLI:awscli"
+        "Azure_CLI:azure-cli"
     )
 
     for entry in "${tools[@]}"; do
         name="${entry%%:*}"
         formula="${entry##*:}"
 
-        read -p "Install $name? (y/n): " ans < /dev/tty
-        if [[ "$ans" == "y" ]]; then
+        printf "Install %s? (y/n): " "$name"
+        read ans
+        if [ "$ans" = "y" ]; then
             case "$name" in
-                "VSCode")
-                    brew install --cask visual-studio-code
-                    ;;
                 "Docker")
-                    brew install --cask docker
-                    ;;
-                "MongoDB")
-                    brew tap mongodb/brew && brew install mongodb-community
-                    ;;
-                "Redis")
-                    brew install redis
-                    ;;
-                "PostgreSQL")
-                    brew install postgresql
-                    ;;
-                "Rosetta")
-                    softwareupdate --install-rosetta --agree-to-license
+                    if command -v sudo >/dev/null 2>&1; then
+                        brew install --cask docker-desktop
+                    else
+                        echo "Skipping Docker: sudo not available for this user."
+                    fi
                     ;;
                 *)
                     brew install "$formula"
@@ -88,28 +73,36 @@ dev_tools_bootstrap() {
 # --- CONFIG WIZARD ---
 run_wizard() {
     echo -e "\n\033[1;32m--- AURORA CONFIGURATION WIZARD ---\033[0m"
-    [ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
+    [ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE"
 
-    read -s -p "🔐 Set Terminal PIN (Enter for none): " NEW_PW < /dev/tty; echo ""
+    printf "🔐 Set Terminal PIN (Enter for none): "
+    stty -echo
+    read NEW_PW
+    stty echo
+    echo ""
 
     echo "🎨 Header Style:"
     echo "1) Mega-Block"
     echo "2) Custom Slant"
-    read -p "Selection: " choice < /dev/tty
+    printf "Selection: "
+    read choice
 
-    if [[ "$choice" == "2" ]]; then
+    if [ "$choice" = "2" ]; then
         HDR_MODE="CUSTOM"
-        read -p "✍️ Header Name: " HDR_VAL < /dev/tty
+        printf "✍️ Header Name: "
+        read HDR_VAL
     else
         HDR_MODE="BLOCK"
         HDR_VAL="Aurora-Shell"
     fi
 
-    read -p "🎂 Birthday (MMDD): " BDAY < /dev/tty
-    read -p "🆔 Prompt ID: " P_ID < /dev/tty
+    printf "🎂 Birthday (MMDD): "
+    read BDAY
+    printf "🆔 Prompt ID: "
+    read P_ID
 
     cat << EOF > "$CONFIG_FILE"
-AURORA_VER="5.9"
+AURORA_VER="6.0"
 AURORA_PW="${NEW_PW:-$AURORA_PW}"
 AURORA_HDR_MODE="$HDR_MODE"
 AURORA_HDR_VAL="$HDR_VAL"
@@ -122,7 +115,9 @@ EOF
 generate_theme() {
 cat << 'EOF' > "$THEME_FILE"
 #!/bin/zsh
-source "$HOME/.aurora-shell_files/aurora-shell_settings"
+
+CONFIG_FILE="$HOME/.aurora-shell_files/aurora-shell_settings"
+[ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE" || return
 
 # --- VS CODE SAFE MODE ---
 if [[ "$VSCODE_SHELL_INTEGRATION" == "1" ]]; then
@@ -138,7 +133,6 @@ authenticate_user() {
     local target_pw="${1:-$AURORA_PW}"
     [[ -z "$target_pw" ]] && return
 
-    # Disable Ctrl+C, Ctrl+Z, Ctrl+\
     trap '' INT
     trap '' TSTP
     trap '' QUIT
@@ -164,7 +158,6 @@ authenticate_user() {
     done
 }
 
-# --- HEADER DISPLAY ---
 Show-Aurora() {
     source "$HOME/.aurora-shell_files/aurora-shell_settings"
     local cols=$(tput cols)
@@ -172,7 +165,7 @@ Show-Aurora() {
 
     if [[ "$AURORA_HDR_MODE" == "BLOCK" ]]; then
         content="
-█████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ 
+ █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗ 
 ██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗
 ███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║
 ██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║
@@ -204,7 +197,6 @@ Show-Aurora() {
 
 authenticate_user
 Show-Aurora
-
 EOF
 }
 
@@ -214,7 +206,9 @@ dev_tools_bootstrap
 run_wizard
 generate_theme
 
-sed -i '' '/aurora-shell_theme/d' ~/.zshrc 2>/dev/null
-echo "source $THEME_FILE" >> "$HOME/.zshrc"
+# Clean old references and add new one safely
+if ! grep -q 'aurora-shell_theme' "$HOME/.zshrc" 2>/dev/null; then
+    echo '[ -f "$HOME/.aurora-shell_files/aurora-shell_theme" ] && source "$HOME/.aurora-shell_files/aurora-shell_theme"' >> "$HOME/.zshrc"
+fi
 
-echo -e "\n\033[1;32m✅ Aurora-Shell v5.9 Installed.\033[0m"
+echo -e "\n\033[1;32m✅ Aurora-Shell v6.0 Installed.\033[0m"
