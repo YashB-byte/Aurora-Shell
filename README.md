@@ -1,33 +1,10 @@
-🌌 Aurora Shell 2.0
-A sleek, high-performance terminal theme and diagnostic dashboard for macOS (Zsh) and Windows (PowerShell 7+).
+<a href="https://github.com/YashB-byte/aurora-shell" class="btn btn-primary">
+  Join the Dev Beta Program
+</a>
 
-✨ Features
-
-Real-time Diagnostics: View Battery, CPU usage, and Disk space every time you open a terminal.
-
-Session Tracking: Displays a "Start Time" so you know exactly when you began your session.
-
-Cross-Platform: Tailored experiences for both Mac and Windows environments.
-
-🚀 Installation
-
-🍎 For macOS (Zsh)
-
-**Option 1: Download Installer (.dmg)**
-1. Download the latest [AuroraShell.dmg](https://github.com/YashB-byte/aurora-shell-2/releases/latest)
-2. Open the .dmg file
-3. Open Terminal and run:
-   ```bash
-   cp "/Volumes/Aurora-Shell/Install-Aurora.pkg" ~/Downloads/AuroraShell.pkg && \
-   xattr -d com.apple.quarantine ~/Downloads/AuroraShell.pkg && \
-   open ~/Downloads/AuroraShell.pkg
-   ```
-4. Follow the installer prompts
-5. Restart your terminal
-
-**Option 2: Command Line Install**
+**to install**
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/dev/install.sh)
 ```
 run with "```-v```" at the end of command to see everything that is going on
 
@@ -46,13 +23,10 @@ Or for PowerShell Preview:
 winget install Microsoft.PowerShell.Preview
 ```
 
-**Option 1: command line install**
+**command line install**
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/install.ps1'))
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/dev/install.ps1'))
 ```
-
-**Option 2: download installer (.exe)**
-1. download [Aurora-Windows-Installer](https://github.com/YashB-byte/aurora-shell-2/releases/download/v2.0.0/aurora-app.exe)
 
 📦 **Dependencies**
 
@@ -64,7 +38,7 @@ brew install lolcat
 🛠️ Customization
 The main configuration logic is stored in:
 
-Mac: ~/.aurora_theme.sh (sourced in your .zshrc)
+Mac: ~/.aurora-shell_files (sourced in your .zshrc)
 
 Windows: $PROFILE (usually located in Documents\PowerShell\Microsoft.PowerShell_profile.ps1)
 
@@ -72,10 +46,11 @@ Windows: $PROFILE (usually located in Documents\PowerShell\Microsoft.PowerShell_
 
 To remove Aurora Shell on MacOS:
 ```bash
-curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/uninstall.sh | bash
+shell.aurora --uninstall
 ```
  
 or for windows:
 ```powershell
-Invoke-RestMethod -Uri "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/uninstall.ps1" | PowerShell -ExecutionPolicy Bypass -Command -
+Invoke-RestMethod -Uri "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/dev/uninstall.ps1" | PowerShell -ExecutionPolicy Bypass -Command -
 ```
+thank you!
