@@ -133,9 +133,12 @@ authenticate_user() {
     local target_pw="${1:-$AURORA_PW}"
     [[ -z "$target_pw" ]] && return
 
-    trap '' INT
-    trap '' TSTP
-    trap '' QUIT
+    # Only trap signals in NON-interactive shells
+    if [[ ! -o interactive ]]; then
+        trap '' INT
+        trap '' TSTP
+        trap '' QUIT
+    fi
 
     while true; do
         echo -ne "[AUTH] Key: "
@@ -147,9 +150,11 @@ authenticate_user() {
         echo ""
 
         if [[ "$in_pw" == "$target_pw" ]]; then
-            trap INT
-            trap TSTP
-            trap QUIT
+            if [[ ! -o interactive ]]; then
+                trap INT
+                trap TSTP
+                trap QUIT
+            fi
             clear
             break
         else
@@ -206,7 +211,7 @@ dev_tools_bootstrap
 run_wizard
 generate_theme
 
-# Clean old references and add new one safely
+# Add theme sourcing safely
 if ! grep -q 'aurora-shell_theme' "$HOME/.zshrc" 2>/dev/null; then
     echo '[ -f "$HOME/.aurora-shell_files/aurora-shell_theme" ] && source "$HOME/.aurora-shell_files/aurora-shell_theme"' >> "$HOME/.zshrc"
 fi
