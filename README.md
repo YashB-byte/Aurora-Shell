@@ -15,6 +15,10 @@
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/dev/install.sh)
 ```
+or for dev branch:
+```bash
+bash <(curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/dev/install.sh)
+```
 run with "```-v```" at the end of command to see everything that is going on
 
 🪟 For Windows (PowerShell 7+)
