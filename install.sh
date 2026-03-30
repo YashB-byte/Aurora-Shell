@@ -273,5 +273,10 @@ generate_theme
 sed -i '' '/aurora-shell_theme/d' ~/.zshrc 2>/dev/null
 echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
+echo "cloning Aurora-shell..."
+cd ~/.aurora-shell_files
+git clone https://github.com/YashB-byte/Aurora-shell.git
+cd ~
+
 echo -e "\n\033[1;32m✅ v5.8.7 Deployed. Xcode installed.\033[0m"
 
