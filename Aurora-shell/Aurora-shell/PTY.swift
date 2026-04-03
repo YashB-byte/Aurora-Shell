@@ -1,39 +1,26 @@
-import Foundation
-import Combine   // REQUIRED for ObservableObject
+import AppKit
+import SwiftTerm
 
-class PTY: ObservableObject {
-    private var process: Process?
-    private var outputPipe = Pipe()
-    private var inputPipe = Pipe()
+final class TerminalTextView: SwiftTerm.TerminalView {
 
-    @Published var output: String = ""
+    var pty: PTY?
+    var onSendData: ((Data) -> Void)?
 
-    func start() {
-        let task = Process()
-        task.launchPath = "/bin/zsh"
-        task.arguments = ["-l"]
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
 
-        task.standardOutput = outputPipe
-        task.standardError = outputPipe
-        task.standardInput = inputPipe
-
-        // Stream output live
-        outputPipe.fileHandleForReading.readabilityHandler = { handle in
-            let data = handle.availableData
-            if let text = String(data: data, encoding: .utf8) {
-                DispatchQueue.main.async {
-                    self.output += text
-                }
-            }
+        self.getTerminal().onSendData = { [weak self] data in
+            self?.onSendData?(Data(data))
         }
-
-        task.launch()
-        self.process = task
     }
 
-    func send(_ command: String) {
-        let data = (command + "\n").data(using: .utf8)!
-        inputPipe.fileHandleForWriting.write(data)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func feed(_ data: Data) {
+        let bytes = [UInt8](data)
+        self.getTerminal().feed(byteArray: bytes)
     }
 }
 

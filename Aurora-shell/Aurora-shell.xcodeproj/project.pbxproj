@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C39085482F7B60510042B6CE /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = C39085472F7B60510042B6CE /* SwiftTerm */; };
+		C390854A2F7B60510042B6CE /* SwiftTermFuzz in Frameworks */ = {isa = PBXBuildFile; productRef = C39085492F7B60510042B6CE /* SwiftTermFuzz */; };
+		C390854C2F7B60510042B6CE /* termcast in Frameworks */ = {isa = PBXBuildFile; productRef = C390854B2F7B60510042B6CE /* termcast */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		C37046092F79A36500603593 /* Aurora-shell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Aurora-shell.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +29,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C39085482F7B60510042B6CE /* SwiftTerm in Frameworks */,
+				C390854A2F7B60510042B6CE /* SwiftTermFuzz in Frameworks */,
+				C390854C2F7B60510042B6CE /* termcast in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +74,9 @@
 			);
 			name = "Aurora-shell";
 			packageProductDependencies = (
+				C39085472F7B60510042B6CE /* SwiftTerm */,
+				C39085492F7B60510042B6CE /* SwiftTermFuzz */,
+				C390854B2F7B60510042B6CE /* termcast */,
 			);
 			productName = "Aurora-shell";
 			productReference = C37046092F79A36500603593 /* Aurora-shell.app */;
@@ -94,6 +106,9 @@
 			);
 			mainGroup = C37046002F79A36500603593;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C370460A2F79A36500603593 /* Products */;
 			projectDirPath = "";
@@ -325,6 +340,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C39085472F7B60510042B6CE /* SwiftTerm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTerm;
+		};
+		C39085492F7B60510042B6CE /* SwiftTermFuzz */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = SwiftTermFuzz;
+		};
+		C390854B2F7B60510042B6CE /* termcast */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			productName = termcast;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C37046012F79A36500603593 /* Project object */;
 }

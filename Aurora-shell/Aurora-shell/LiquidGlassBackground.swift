@@ -1,15 +1,10 @@
 import SwiftUI
-import AppKit
 
-struct LiquidGlassBackground: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = .hudWindow
-        view.blendingMode = .behindWindow
-        view.state = .active
-        return view
+struct LiquidGlassBackground: View {
+    var body: some View {
+        Rectangle()
+            .fill(.ultraThinMaterial)
+            .ignoresSafeArea()
     }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }
 

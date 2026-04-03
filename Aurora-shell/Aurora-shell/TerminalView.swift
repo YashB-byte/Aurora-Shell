@@ -1,19 +1,29 @@
 import SwiftUI
+import SwiftTerm
 
-struct TerminalView: View {
-    @StateObject private var pty = PTY()
+struct TerminalView: NSViewRepresentable {
+    func makeNSView(context: Context) -> TerminalTextView {
+        let view = TerminalTextView(frame: .zero)
 
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.35).ignoresSafeArea()
+        let pty = try! PTY(
+            executable: "/bin/zsh",
+            args: ["-l"]
+        )
 
-            TerminalTextViewRepresentable(pty: pty)
-                .padding()
+        // PTY → terminal
+        pty.onOutput = { data in
+            view.feed(data)
         }
-        .onAppear {
-            pty.output = "Aurora Shell v1.0\n\n"
-            pty.start()
+
+        // terminal → PTY
+        view.onSendData = { data in
+            pty.write(data)
         }
+
+        view.pty = pty
+        return view
     }
+
+    func updateNSView(_ nsView: TerminalTextView, context: Context) {}
 }
 

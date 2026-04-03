@@ -1,15 +1,10 @@
 import SwiftUI
 
 struct TerminalTextViewRepresentable: NSViewRepresentable {
-    @ObservedObject var pty: PTY
-
     func makeNSView(context: Context) -> TerminalTextView {
-        let view = TerminalTextView()
-        return view
+        TerminalTextView()
     }
 
-    func updateNSView(_ nsView: TerminalTextView, context: Context) {
-        nsView.append(pty.output)
-    }
+    func updateNSView(_ nsView: TerminalTextView, context: Context) {}
 }
 

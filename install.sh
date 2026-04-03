@@ -8,6 +8,7 @@ DATA_DIR="$HOME/.aurora-shell_files"
 THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
+GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
 
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
@@ -273,10 +274,9 @@ generate_theme
 sed -i '' '/aurora-shell_theme/d' ~/.zshrc 2>/dev/null
 echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
-echo "cloning Aurora-shell..."
-cd ~/.aurora-shell_files
-git clone https://github.com/YashB-byte/Aurora-shell.git
-cd ~
+echo "Cloning Aurora-shell..."
+cd $DATA_DIR
+git clone $GIT_CLONE
+cd $HOME
 
 echo -e "\n\033[1;32m✅ v5.8.7 Deployed. Xcode installed.\033[0m"
-

@@ -1,34 +1,28 @@
 import AppKit
-import SwiftUI
+import SwiftTerm
 
-class TerminalTextView: NSScrollView {
+final class TerminalTextView: SwiftTerm.TerminalView {
 
-    private let textView = NSTextView()
+    var pty: PTY?
+    var onSendData: ((Data) -> Void)?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
 
-        self.documentView = textView
-        self.hasVerticalScroller = true
-        self.borderType = .noBorder
-        self.drawsBackground = false
-
-        textView.isEditable = false
-        textView.isRichText = false
-        textView.font = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
-        textView.textColor = .white
-        textView.backgroundColor = .clear
-        textView.insertionPointColor = .white
+        // Terminal → PTY
+        self.getTerminal().onSendData = { [weak self] data in
+            self?.onSendData?(Data(data))
+        }
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func append(_ string: String) {
-        let attr = NSAttributedString(string: string)
-        textView.textStorage?.append(attr)
-
-        textView.scrollToEndOfDocument(nil)
+    /// PTY → Terminal
+    func feed(_ data: Data) {
+        let bytes = [UInt8](data)
+        self.getTerminal().feed(byteArray: bytes)
     }
 }
+
