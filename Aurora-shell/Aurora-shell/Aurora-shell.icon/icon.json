@@ -1,0 +1,57 @@
+{
+  "color-space-for-untagged-svg-colors" : "display-p3",
+  "fill-specializations" : [
+    {
+      "value" : {
+        "automatic-gradient" : "extended-srgb:0.20392,0.78039,0.34902,1.00000"
+      }
+    },
+    {
+      "appearance" : "light",
+      "value" : "system-dark"
+    },
+    {
+      "idiom" : "square",
+      "value" : "system-dark"
+    }
+  ],
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "glass" : true,
+          "hidden" : true,
+          "image-name" : "Copilot_20260403_194425.png",
+          "name" : "Copilot_20260403_194425",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              -0.7734375,
+              -6
+            ]
+          }
+        },
+        {
+          "hidden" : false,
+          "image-name" : "Copilot_20260404_080540.png",
+          "name" : "Copilot_20260404_080540"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
