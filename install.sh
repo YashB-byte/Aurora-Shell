@@ -274,9 +274,19 @@ generate_theme
 sed -i '' '/aurora-shell_theme/d' ~/.zshrc 2>/dev/null
 echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
-echo "Cloning Aurora-shell..."
-cd $DATA_DIR
-git clone $GIT_CLONE
-cd $HOME
+echo "Checking Aurora-shell..."
+
+cd "$DATA_DIR"
+
+if [ -d "aurora-shell" ]; then
+    echo "🔄 Repo already exists — updating..."
+    cd aurora-shell
+    git pull --rebase --autostash || true
+else
+    echo "⬇ Cloning fresh copy..."
+    git clone "$GIT_CLONE" aurora-shell || true
+fi
+
+cd "$HOME"
 
 echo -e "\n\033[1;32m✅ v5.8.7 Deployed. Xcode installed.\033[0m"
