@@ -276,7 +276,7 @@ generate_theme
 sed -i '' '/aurora-shell_theme/d' ~/.zshrc 2>/dev/null
 echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
-echo "Checking Aurora-shell..."
+echo "🌀Checking Aurora-shell..."
 
 TARGET_REPO="https://github.com/YashB-byte/aurora-shell.git"
 
