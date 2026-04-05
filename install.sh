@@ -279,8 +279,8 @@ echo "Checking Aurora-shell..."
 
 TARGET_REPO="https://github.com/YashB-byte/aurora-shell.git"
 
-# Search for a real Git repo named aurora-shell that belongs to YOU
-FOUND_REPO=$(find "$HOME" -type d -name "aurora-shell" -maxdepth 5 2>/dev/null | while read -r dir; do
+# Search the entire home folder for a REAL Aurora-shell Git repo
+FOUND_REPO=$(find "$HOME" -type d -name "aurora-shell" -maxdepth 10 2>/dev/null | while read -r dir; do
     if [ -d "$dir/.git" ]; then
         ORIGIN=$(git -C "$dir" remote get-url origin 2>/dev/null)
         if [ "$ORIGIN" = "$TARGET_REPO" ]; then
@@ -291,7 +291,7 @@ FOUND_REPO=$(find "$HOME" -type d -name "aurora-shell" -maxdepth 5 2>/dev/null |
 done)
 
 if [ -n "$FOUND_REPO" ]; then
-    echo "🔄 Found your Aurora-shell repo at: $FOUND_REPO"
+    echo "🔄 Found existing Aurora-shell repo at: $FOUND_REPO"
     cd "$FOUND_REPO"
     git pull --rebase --autostash || true
 else
