@@ -276,15 +276,28 @@ echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
 echo "Checking Aurora-shell..."
 
-cd "$DATA_DIR"
+TARGET_REPO="https://github.com/YashB-byte/aurora-shell.git"
 
-if [ -d "aurora-shell" ]; then
-    echo "🔄 Repo already exists — updating..."
-    cd aurora-shell
+# Search for a real Git repo named aurora-shell that belongs to YOU
+FOUND_REPO=$(find "$HOME" -type d -name "aurora-shell" -maxdepth 5 2>/dev/null | while read -r dir; do
+    if [ -d "$dir/.git" ]; then
+        ORIGIN=$(git -C "$dir" remote get-url origin 2>/dev/null)
+        if [ "$ORIGIN" = "$TARGET_REPO" ]; then
+            echo "$dir"
+            break
+        fi
+    fi
+done)
+
+if [ -n "$FOUND_REPO" ]; then
+    echo "🔄 Found your Aurora-shell repo at: $FOUND_REPO"
+    cd "$FOUND_REPO"
     git pull --rebase --autostash || true
 else
-    echo "⬇ Cloning fresh copy..."
-    git clone "$GIT_CLONE" aurora-shell || true
+    echo "⬇ No matching repo found — cloning fresh copy..."
+    mkdir -p "$DATA_DIR"
+    cd "$DATA_DIR"
+    git clone "$TARGET_REPO" aurora-shell || true
 fi
 
 cd "$HOME"
