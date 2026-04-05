@@ -12,7 +12,7 @@ GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
 
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
-echo "aurora-shell installer"
+echo "aurora-shell installer" | lolcat
 
 # --- SYNC ENVIRONMENT ---
 sync_env() {
