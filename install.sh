@@ -12,6 +12,7 @@ GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
 
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
+echo "aurora-shell installer"
 
 # --- SYNC ENVIRONMENT ---
 sync_env() {
@@ -85,7 +86,7 @@ run_wizard() {
     read P_ID
 
     cat << EOF > "$CONFIG_FILE"
-AURORA_VER="5.8.7"
+AURORA_VER="5.8.8"
 AURORA_PW="${NEW_PW:-$AURORA_PW}"
 AURORA_HDR_MODE="$HDR_MODE"
 AURORA_HDR_VAL="$HDR_VAL"
