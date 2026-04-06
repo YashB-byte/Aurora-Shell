@@ -278,8 +278,7 @@ echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
 echo "🌀 Checking Aurora-shell..."
 
-TARGET_REPO="https://github.com/YashB-byte/aurora-shell.git"
-
+# Search the entire home folder for a REAL Aurora-shell Git repo
 FOUND_REPO=$(find "$HOME" -maxdepth 10 -type d -name "aurora-shell" 2>/dev/null | while read -r dir; do
     if [ -d "$dir/.git" ]; then
         ORIGIN=$(git -C "$dir" remote get-url origin 2>/dev/null)
@@ -296,11 +295,11 @@ if [ -n "$FOUND_REPO" ]; then
     git pull --rebase --autostash || true
 else
     echo "⬇ No matching repo found — cloning fresh copy..."
-    mkdir -p "$DATA_DIR"
     cd "$DATA_DIR"
-    git clone "$TARGET_REPO" aurora-shell || true
+    git clone "$GIT_CLONE" aurora-shell || true
 fi
 
 cd "$HOME"
+
 
 echo -e "\n\033[1;32m✅ v5.8.7 Deployed. Xcode installed.\033[0m"
