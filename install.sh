@@ -282,7 +282,7 @@ echo "🌀 Checking Aurora-shell..."
 FOUND_REPO=$(find "$HOME" -maxdepth 10 -type d -name "aurora-shell" 2>/dev/null | while read -r dir; do
     if [ -d "$dir/.git" ]; then
         ORIGIN=$(git -C "$dir" remote get-url origin 2>/dev/null)
-        if [ "$ORIGIN" = "$TARGET_REPO" ]; then
+        if [ "$ORIGIN" = "$GIT_CLONE" ]; then
             echo "$dir"
             break
         fi
