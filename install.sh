@@ -1,6 +1,6 @@
 #!/bin/bash
-# --- AURORA-SHELL MASTER v5.8.8 ---
-# VERSION: 5.8.8
+# --- AURORA-SHELL MASTER v5.4.0 ---
+# VERSION: 5.4.0
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
@@ -87,7 +87,7 @@ run_wizard() {
     read P_ID
 
     cat << EOF > "$CONFIG_FILE"
-AURORA_VER="5.8.8"
+AURORA_VER="5.4.0"
 AURORA_PW="${NEW_PW:-$AURORA_PW}"
 AURORA_HDR_MODE="$HDR_MODE"
 AURORA_HDR_VAL="$HDR_VAL"
@@ -302,4 +302,4 @@ fi
 cd "$HOME"
 
 
-echo -e "\n\033[1;32m✅ v5.8.7 Deployed. Xcode installed.\033[0m"
+echo -e "\n\033[1;32m✅ v5.4.0 Deployed. Xcode installed.\033[0m"
