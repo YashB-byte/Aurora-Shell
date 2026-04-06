@@ -280,8 +280,7 @@ echo "🌀Checking Aurora-shell..."
 
 TARGET_REPO="https://github.com/YashB-byte/aurora-shell.git"
 
-# Search the entire home folder for a REAL Aurora-shell Git repo
-FOUND_REPO=$(find "$HOME" -type d -name "aurora-shell" -maxdepth 10 2>/dev/null | while read -r dir; do
+FOUND_REPO=$(find "$HOME" -maxdepth 10 -type d -name "aurora-shell" 2>/dev/null | while read -r dir; do
     if [ -d "$dir/.git" ]; then
         ORIGIN=$(git -C "$dir" remote get-url origin 2>/dev/null)
         if [ "$ORIGIN" = "$TARGET_REPO" ]; then
