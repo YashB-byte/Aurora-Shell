@@ -1,3 +1,4 @@
+// FILE: ShellViewModel.swift
 import Foundation
 import Combine
 
@@ -7,31 +8,32 @@ final class ShellViewModel: ObservableObject {
 
     private let engine = TerminalEngine()
     private var model = ShellModel()
+    private var cancellables = Set<AnyCancellable>()
 
-    func bootstrap() {
-        if lines.isEmpty {
-            append(system: "Aurora-shell v0.1 • AppleOS")
-            append(system: "Type 'help' to see available commands.")
-        }
+    init() {
+        engine.output
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] text in
+                self?.append(system: text)
+            }
+            .store(in: &cancellables)
+
+        engine.start()
     }
 
     func handle(command: String) {
         append(prompt: model.prompt, text: command)
-
-        let output = engine.run(command: command)
-        for line in output {
-            append(system: line.text, isError: line.isError)
-        }
+        engine.send(command)
     }
 
     private func append(prompt: String? = nil, text: String, isError: Bool = false) {
         let line = ShellLine(prompt: prompt, text: text, isError: isError)
         model.lines.append(line)
         lines = model.lines
-        self.prompt = model.prompt
     }
 
     private func append(system text: String, isError: Bool = false) {
         append(prompt: nil, text: text, isError: isError)
     }
 }
+
