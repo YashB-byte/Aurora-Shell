@@ -11,6 +11,9 @@ on:
   repository_dispatch:
     types: [trigger-aurora-build]
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     name: Build & Verify
@@ -57,6 +60,9 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - name: Get Version
