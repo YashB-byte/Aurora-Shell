@@ -83,3 +83,18 @@ or for windows:
 ```powershell
 Invoke-RestMethod -Uri "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/uninstall.ps1" | PowerShell -ExecutionPolicy Bypass -Command -
 ```
+
+Example banners:
+
+for figlet:
+
+```Aurora-Shell
+                                ___                                    _____ __         ____
+                               /   | __  ___________  _________ _     / ___// /_  ___  / / /
+                              / /| |/ / / / ___/ __ \/ ___/ __ `/_____\__ \/ __ \/ _ \/ / / 
+                             / ___ / /_/ / /  / /_/ / /  / /_/ /_____/__/ / / / /  __/ / /  
+                            /_/  |_\__,_/_/   \____/_/   \__,_/     /____/_/ /_/\___/_/_/   
+                                                                                            
+                          ⚡ AURORA v5.4.0 | 🧠 CPU: 12.72% | 💾 FREE: 19Gi | 🔋 35% | 📅 04/12/26
+------------------------------------------------------------------------------------------------------------------------
+```
