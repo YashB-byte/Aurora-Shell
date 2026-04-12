@@ -40,7 +40,7 @@ Show-AuroraDisplay() {
       ███████║██║  ██║███████╗███████╗███████╗          
       ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝" | lolcat
     else
-        figlet -f slant "Yash Behera" | lolcat
+        figlet -f slant "Aurora-Shell" | lolcat
     fi
     
     padding_val=$(( (window_width - ${#stats_line}) / 2 ))
