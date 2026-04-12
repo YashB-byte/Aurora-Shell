@@ -1,4 +1,4 @@
-##🌌 Aurora-Shell
+#🌌 Aurora-Shell
 Aurora-Shell is a sleek, high-performance terminal theme and diagnostic dashboard for macOS (Zsh) and Windows (PowerShell 7+).
 
 ✨ Features
