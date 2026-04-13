@@ -7,6 +7,5 @@ struct MainView: View {
         TerminalViewRepresentable(engine: engine)
             .background(Color.black)
             .ignoresSafeArea()
-            .onAppear { engine.start() }
     }
 }

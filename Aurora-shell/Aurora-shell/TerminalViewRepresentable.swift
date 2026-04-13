@@ -10,6 +10,9 @@ struct TerminalViewRepresentable: NSViewRepresentable {
     func makeNSView(context: Context) -> TerminalView {
         let term = TerminalView(frame: .zero)
         term.terminalDelegate = context.coordinator
+        let cols = term.terminal.cols > 0 ? term.terminal.cols : 80
+        let rows = term.terminal.rows > 0 ? term.terminal.rows : 24
+        engine.start(cols: cols, rows: rows)
         engine.output
             .receive(on: DispatchQueue.main)
             .sink { data in term.feed(byteArray: ArraySlice(data)) }
@@ -26,7 +29,9 @@ struct TerminalViewRepresentable: NSViewRepresentable {
         init(engine: TerminalEngine) { self.engine = engine }
 
         func send(source: TerminalView, data: ArraySlice<UInt8>) { engine.sendRaw(Data(data)) }
-        func sizeChanged(source: TerminalView, newCols: Int, newRows: Int) {}
+        func sizeChanged(source: TerminalView, newCols: Int, newRows: Int) {
+            engine.setSize(cols: newCols, rows: newRows)
+        }
         func setTerminalTitle(source: TerminalView, title: String) {}
         func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {}
         func scrolled(source: TerminalView, position: Double) {}
