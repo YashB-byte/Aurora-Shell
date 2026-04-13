@@ -10,6 +10,9 @@ struct TerminalViewRepresentable: NSViewRepresentable {
     func makeNSView(context: Context) -> TerminalView {
         let term = TerminalView(frame: .zero)
         term.terminalDelegate = context.coordinator
+        term.nativeBackgroundColor = .clear
+        term.wantsLayer = true
+        term.layer?.backgroundColor = .clear
         let cols = term.terminal.cols > 0 ? term.terminal.cols : 80
         let rows = term.terminal.rows > 0 ? term.terminal.rows : 24
         engine.start(cols: cols, rows: rows)

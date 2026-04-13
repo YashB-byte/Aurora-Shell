@@ -7,15 +7,13 @@ struct MainView: View {
         ZStack {
             LiquidBackground()
 
-            // Frosted glass panel behind terminal
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.ultraThinMaterial)
-                .opacity(0.6)
-                .padding(8)
-
             TerminalViewRepresentable(engine: engine)
-                .background(.clear)
+                .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
                 .padding(12)
         }
         .ignoresSafeArea()
