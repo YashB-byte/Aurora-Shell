@@ -31,42 +31,9 @@ jobs:
           brew install create-dmg
           create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" dmg_src/
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: mac-dmg
-          path: Aurora-Shell-Mac.dmg
-
-  build-windows:
-    name: Build Windows EXE
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build EXE with NSIS
-        run: |
-          choco install nsis -y
-          echo "C:\Program Files (x86)\NSIS" >> $GITHUB_PATH
-          & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /V3 installer.nsi
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-exe
-          path: "*.exe"
-
-  release:
-    name: Create GitHub Release
-    needs: [build-mac, build-windows]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            Aurora-Shell-Mac.dmg
-            *.exe
+          files: Aurora-Shell-Mac.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
