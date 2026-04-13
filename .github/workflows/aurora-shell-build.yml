@@ -23,6 +23,11 @@ jobs:
             -derivedDataPath build \
             CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
+      - name: Fix rpath
+        run: |
+          APP=$(find build -name "Aurora-Shell.app" -o -name "Aurora-shell.app" | head -1)
+          install_name_tool -add_rpath @executable_path/../Frameworks "$APP/Contents/MacOS/Aurora-Shell"
+
       - name: Package into DMG
         run: |
           APP=$(find build -name "Aurora-Shell.app" -o -name "Aurora-shell.app" | head -1)
