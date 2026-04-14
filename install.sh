@@ -1,6 +1,6 @@
 #!/bin/bash
-# --- AURORA-SHELL MASTER v5.8.8 ---
-# VERSION: 5.8.8
+SHELL_VER="--- Aurora-Shell v5.4.0 ---"
+# VERSION: 5.4.0
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
@@ -12,6 +12,8 @@ GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
 
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
+
+echo "aurora-shell "$SHELL_VER" installer" | lolcat
 
 # --- SYNC ENVIRONMENT ---
 sync_env() {
@@ -85,7 +87,7 @@ run_wizard() {
     read P_ID
 
     cat << EOF > "$CONFIG_FILE"
-AURORA_VER="5.8.7"
+AURORA_VER="5.4.0"
 AURORA_PW="${NEW_PW:-$AURORA_PW}"
 AURORA_HDR_MODE="$HDR_MODE"
 AURORA_HDR_VAL="$HDR_VAL"
@@ -274,19 +276,30 @@ generate_theme
 sed -i '' '/aurora-shell_theme/d' ~/.zshrc 2>/dev/null
 echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
-echo "Checking Aurora-shell..."
+echo "🌀 Checking Aurora-shell..."
 
-cd "$DATA_DIR"
+# Search the entire home folder for a REAL Aurora-shell Git repo
+FOUND_REPO=$(find "$HOME" -maxdepth 10 -type d -name "aurora-shell" 2>/dev/null | while read -r dir; do
+    if [ -d "$dir/.git" ]; then
+        ORIGIN=$(git -C "$dir" remote get-url origin 2>/dev/null)
+        if [ "$ORIGIN" = "$GIT_CLONE" ]; then
+            echo "$dir"
+            break
+        fi
+    fi
+done)
 
-if [ -d "aurora-shell" ]; then
-    echo "🔄 Repo already exists — updating..."
-    cd aurora-shell
+if [ -n "$FOUND_REPO" ]; then
+    echo "🔄 Found existing Aurora-shell repo at: $FOUND_REPO"
+    cd "$FOUND_REPO"
     git pull --rebase --autostash || true
 else
-    echo "⬇ Cloning fresh copy..."
+    echo "⬇ No matching repo found — cloning fresh copy..."
+    cd "$DATA_DIR"
     git clone "$GIT_CLONE" aurora-shell || true
 fi
 
 cd "$HOME"
 
-echo -e "\n\033[1;32m✅ v5.8.7 Deployed. Xcode installed.\033[0m"
+
+echo -e "\n\033[1;32m✅ v5.4.0 Deployed. Xcode installed.\033[0m"

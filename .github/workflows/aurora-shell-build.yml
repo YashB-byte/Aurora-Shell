@@ -2,95 +2,43 @@ name: Aurora-Shell CI/CD
 
 on:
   push:
-    branches: [ dev ]
     tags: [ 'v*' ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
-  # --- Trigger 2: External API / Event Trigger ---
-  repository_dispatch:
-    types: [trigger-aurora-build]
+
+permissions:
+  contents: write
 
 jobs:
-  build-and-test:
-    name: Build & Verify
-    strategy:
-      # FIX: Prevents Windows failure from canceling the Mac build
-      fail-fast: false 
-      matrix:
-        os: [windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+  build-mac:
+    name: Build Mac DMG
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
-      # --- WINDOWS FIX ---
-      - name: Build Windows EXE
-        if: matrix.os == 'windows-latest'
+      - name: Build Aurora-Shell.app
         run: |
-          choco install nsis -y
-          # FIX: Explicitly tell the runner where makensis lives
-          echo "C:\Program Files (x86)\NSIS" >> $GITHUB_PATH
-          # Refreshing the path for the current shell
-          & "${env:ProgramFiles(x86)}\NSIS\makensis.exe" /V3 installer.nsi
+          xcodebuild -project Aurora-shell/Aurora-Shell.xcodeproj \
+            -scheme Aurora-shell \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
-      # --- MACOS FIX ---
-      - name: Build Mac DMG (User-Level)
-        if: matrix.os == 'macos-latest'
+      - name: Fix rpath
         run: |
-          mkdir -p pkg_root
-          cp ./install.sh pkg_root/
-          pkgbuild --root pkg_root --identifier com.aurora.shell --version "5.8.8" --install-location "$HOME/.aurora-shell" "Install-Aurora.pkg"
+          APP=$(find build -name "Aurora-Shell.app" -o -name "Aurora-shell.app" | head -1)
+          install_name_tool -add_rpath @executable_path/../Frameworks "$APP/Contents/MacOS/Aurora-Shell"
+
+      - name: Package into DMG
+        run: |
+          APP=$(find build -name "Aurora-Shell.app" -o -name "Aurora-shell.app" | head -1)
+          mkdir dmg_src
+          cp -R "$APP" dmg_src/
           brew install create-dmg
-          mkdir dmg_content && mv "Install-Aurora.pkg" dmg_content/
-          create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" "dmg_content/"
+          create-dmg --volname "Aurora-Shell" "Aurora-Shell-Mac.dmg" dmg_src/
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.os }}-build
-          path: |
-            *.exe
-            *.dmg
-
-  create-pull-request:
-    name: Create PR to Main
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Get Version
-        id: get_ver
-        run: |
-          VER=$(grep -m 1 "VERSION=" install.sh | cut -d'"' -f2)
-          echo "VERSION=$VER" >> $GITHUB_OUTPUT
-      - name: Open PR
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: dev
-          base: main
-          title: "🚀 Production Ready (v${{ steps.get_ver.outputs.VERSION }})"
-          body: "Verification complete for v${{ steps.get_ver.outputs.VERSION }}."
-
-  publish-release:
-    name: Request Production Release
-    needs: build-and-test
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    environment: Production
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            *.exe
-            *.dmg
+          files: Aurora-Shell-Mac.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,5 @@
-🌌 Aurora Shell 2.0
-A sleek, high-performance terminal theme and diagnostic dashboard for macOS (Zsh) and Windows (PowerShell 7+).
+# 🌌 Aurora-Shell
+Aurora-Shell is a sleek, high-performance terminal theme and diagnostic dashboard for macOS (Zsh) and Windows (PowerShell 7+).
 
 ✨ Features
 
@@ -82,4 +82,55 @@ curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/uninsta
 or for windows:
 ```powershell
 Invoke-RestMethod -Uri "https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/uninstall.ps1" | PowerShell -ExecutionPolicy Bypass -Command -
+```
+
+Example banners:
+
+for figlet:
+
+```Aurora-Shell
+                                ___                                    _____ __         ____
+                               /   | __  ___________  _________ _     / ___// /_  ___  / / /
+                              / /| |/ / / / ___/ __ \/ ___/ __ `/_____\__ \/ __ \/ _ \/ / / 
+                             / ___ / /_/ / /  / /_/ / /  / /_/ /_____/__/ / / / /  __/ / /  
+                            /_/  |_\__,_/_/   \____/_/   \__,_/     /____/_/ /_/\___/_/_/   
+                                                                                            
+                          ⚡ AURORA v5.4.0 | 🧠 CPU: 10.00% | 💾 FREE: 100Gi | 🔋 100% | 📅 00/00/00
+------------------------------------------------------------------------------------------------------------------------
+```
+
+For block:
+
+```Aurora-Shell
+                                  
+                                   █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗  
+                                  ██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗ 
+                                  ███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║ 
+                                  ██╔══██║██║   ██║██╔══██╗██║   ██║██╔══██╗██╔══██║ 
+                                  ██║  ██║╚██████╔╝██║  ██║╚██████╔╝██║  ██║██║  ██║ 
+                                  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ 
+                                                                                     
+                                        ███████╗██╗  ██╗███████╗██╗     ██╗          
+                                        ██╔════╝██║  ██║██╔════╝██║     ██║          
+                                        ███████╗███████║█████╗  ██║     ██║          
+                                        ╚════██║██╔══██║██╔══╝  ██║     ██║          
+                                        ███████║██║  ██║███████╗███████╗███████╗     
+                                        ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝
+                                  
+                          ⚡ AURORA v5.4.0 | 🧠 CPU: 10.00% | 💾 FREE: 100Gi | 🔋 100% | 📅 00/00/00
+------------------------------------------------------------------------------------------------------------------------
+```
+
+For lock:
+
+```Aurora-shell
+           .---.
+          /     \
+         | (00)  |  SYSTEM ENCRYPTED
+          \  ^  /
+           '---'
+     ╔════════════════════════════════════════╗
+     ║     AURORA-SHELL SECURITY TERMINAL     ║
+     ╚════════════════════════════════════════╝
+[AUTH] Key: 
 ```

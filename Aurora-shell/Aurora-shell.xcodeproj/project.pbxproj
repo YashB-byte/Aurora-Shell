@@ -7,19 +7,32 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C39085482F7B60510042B6CE /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = C39085472F7B60510042B6CE /* SwiftTerm */; };
-		C390854A2F7B60510042B6CE /* SwiftTermFuzz in Frameworks */ = {isa = PBXBuildFile; productRef = C39085492F7B60510042B6CE /* SwiftTermFuzz */; };
-		C390854C2F7B60510042B6CE /* termcast in Frameworks */ = {isa = PBXBuildFile; productRef = C390854B2F7B60510042B6CE /* termcast */; };
+		C3D8A15F2F8D56CA00B9DD74 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = C3D8A15E2F8D56CA00B9DD74 /* SwiftTerm */; };
+		C3D8A1612F8D56CA00B9DD74 /* SwiftTermFuzz in Frameworks */ = {isa = PBXBuildFile; productRef = C3D8A1602F8D56CA00B9DD74 /* SwiftTermFuzz */; };
+		C3D8A1632F8D56CA00B9DD74 /* termcast in Frameworks */ = {isa = PBXBuildFile; productRef = C3D8A1622F8D56CA00B9DD74 /* termcast */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		C39A22F82F849FAE00745502 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		C37046092F79A36500603593 /* Aurora-shell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Aurora-shell.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C37046092F79A36500603593 /* Aurora-Shell.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Aurora-Shell.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		C370460B2F79A36500603593 /* Aurora-shell */ = {
+		C370460B2F79A36500603593 /* Aurora-Shell */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Aurora-shell";
+			path = "Aurora-Shell";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -29,9 +42,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C39085482F7B60510042B6CE /* SwiftTerm in Frameworks */,
-				C390854A2F7B60510042B6CE /* SwiftTermFuzz in Frameworks */,
-				C390854C2F7B60510042B6CE /* termcast in Frameworks */,
+				C3D8A15F2F8D56CA00B9DD74 /* SwiftTerm in Frameworks */,
+				C3D8A1612F8D56CA00B9DD74 /* SwiftTermFuzz in Frameworks */,
+				C3D8A1632F8D56CA00B9DD74 /* termcast in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -41,7 +54,7 @@
 		C37046002F79A36500603593 = {
 			isa = PBXGroup;
 			children = (
-				C370460B2F79A36500603593 /* Aurora-shell */,
+				C370460B2F79A36500603593 /* Aurora-Shell */,
 				C370460A2F79A36500603593 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -49,7 +62,7 @@
 		C370460A2F79A36500603593 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C37046092F79A36500603593 /* Aurora-shell.app */,
+				C37046092F79A36500603593 /* Aurora-Shell.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -57,29 +70,30 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C37046082F79A36500603593 /* Aurora-shell */ = {
+		C37046082F79A36500603593 /* Aurora-Shell */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C37046142F79A36700603593 /* Build configuration list for PBXNativeTarget "Aurora-shell" */;
+			buildConfigurationList = C37046142F79A36700603593 /* Build configuration list for PBXNativeTarget "Aurora-Shell" */;
 			buildPhases = (
 				C37046052F79A36500603593 /* Sources */,
 				C37046062F79A36500603593 /* Frameworks */,
 				C37046072F79A36500603593 /* Resources */,
+				C39A22F82F849FAE00745502 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				C370460B2F79A36500603593 /* Aurora-shell */,
+				C370460B2F79A36500603593 /* Aurora-Shell */,
 			);
-			name = "Aurora-shell";
+			name = "Aurora-Shell";
 			packageProductDependencies = (
-				C39085472F7B60510042B6CE /* SwiftTerm */,
-				C39085492F7B60510042B6CE /* SwiftTermFuzz */,
-				C390854B2F7B60510042B6CE /* termcast */,
+				C3D8A15E2F8D56CA00B9DD74 /* SwiftTerm */,
+				C3D8A1602F8D56CA00B9DD74 /* SwiftTermFuzz */,
+				C3D8A1622F8D56CA00B9DD74 /* termcast */,
 			);
-			productName = "Aurora-shell";
-			productReference = C37046092F79A36500603593 /* Aurora-shell.app */;
+			productName = "Aurora-Shell";
+			productReference = C37046092F79A36500603593 /* Aurora-Shell.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -94,10 +108,11 @@
 				TargetAttributes = {
 					C37046082F79A36500603593 = {
 						CreatedOnToolsVersion = 26.4;
+						LastSwiftMigration = 2640;
 					};
 				};
 			};
-			buildConfigurationList = C37046042F79A36500603593 /* Build configuration list for PBXProject "Aurora-shell" */;
+			buildConfigurationList = C37046042F79A36500603593 /* Build configuration list for PBXProject "Aurora-Shell" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -107,14 +122,14 @@
 			mainGroup = C37046002F79A36500603593;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */,
+				C3D8A15D2F8D56CA00B9DD74 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C370460A2F79A36500603593 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C37046082F79A36500603593 /* Aurora-shell */,
+				C37046082F79A36500603593 /* Aurora-Shell */,
 			);
 		};
 /* End PBXProject section */
@@ -261,67 +276,94 @@
 		C37046152F79A36700603593 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Aurora-Shell/Aurora-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yashb.Aurora-shell";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yashb.Aurora-Shell";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "xrsimulator xros watchsimulator watchos macosx iphonesimulator iphoneos driverkit appletvsimulator appletvos";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,3,4,6,7";
+				TVOS_DEPLOYMENT_TARGET = 15.6;
+				XROS_DEPLOYMENT_TARGET = 1.3;
 			};
 			name = Debug;
 		};
 		C37046162F79A36700603593 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Aurora-Shell/Aurora-Shell.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yashb.Aurora-shell";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yashb.Aurora-Shell";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "xrsimulator xros watchsimulator watchos macosx iphonesimulator iphoneos driverkit appletvsimulator appletvos";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,3,4,6,7";
+				TVOS_DEPLOYMENT_TARGET = 15.6;
+				XROS_DEPLOYMENT_TARGET = 1.3;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C37046042F79A36500603593 /* Build configuration list for PBXProject "Aurora-shell" */ = {
+		C37046042F79A36500603593 /* Build configuration list for PBXProject "Aurora-Shell" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C37046122F79A36700603593 /* Debug */,
@@ -330,7 +372,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C37046142F79A36700603593 /* Build configuration list for PBXNativeTarget "Aurora-shell" */ = {
+		C37046142F79A36700603593 /* Build configuration list for PBXNativeTarget "Aurora-Shell" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C37046152F79A36700603593 /* Debug */,
@@ -342,7 +384,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
+		C3D8A15D2F8D56CA00B9DD74 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/migueldeicaza/SwiftTerm";
 			requirement = {
@@ -353,19 +395,19 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		C39085472F7B60510042B6CE /* SwiftTerm */ = {
+		C3D8A15E2F8D56CA00B9DD74 /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			package = C3D8A15D2F8D56CA00B9DD74 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
 			productName = SwiftTerm;
 		};
-		C39085492F7B60510042B6CE /* SwiftTermFuzz */ = {
+		C3D8A1602F8D56CA00B9DD74 /* SwiftTermFuzz */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			package = C3D8A15D2F8D56CA00B9DD74 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
 			productName = SwiftTermFuzz;
 		};
-		C390854B2F7B60510042B6CE /* termcast */ = {
+		C3D8A1622F8D56CA00B9DD74 /* termcast */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C39085462F7B60510042B6CE /* XCRemoteSwiftPackageReference "SwiftTerm" */;
+			package = C3D8A15D2F8D56CA00B9DD74 /* XCRemoteSwiftPackageReference "SwiftTerm" */;
 			productName = termcast;
 		};
 /* End XCSwiftPackageProductDependency section */
