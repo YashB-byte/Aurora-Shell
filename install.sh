@@ -308,10 +308,10 @@ fi
 cd "$HOME"
 
 
-echo -e "\n\033[1;32m✅ v5.4.0 Deployed. Xcode installed.\033[0m"
+echo -e "\n\033[1;32m✅ v5.4.0 Deployed. 🛠️Xcode installed.\033[0m"
 
 echo "welcome to Aurora-Shell" | safe_lolcat
 
 echo "sourcing Aurora-shell..." | safe_lolcat
 
-source "~/.aurora-shell_files"
+source "~/.zshrc"
