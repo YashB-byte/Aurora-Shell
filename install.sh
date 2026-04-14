@@ -11,10 +11,10 @@ CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
 
-echo "removing old version"
+echo -e "removing old version"
 rm -rf "$OLD_SHELL"
 
-echo "Making "$DATA_DIR" "
+echo -e "Making "$DATA_DIR" "
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
 
