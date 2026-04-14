@@ -1,6 +1,6 @@
 #!/bin/bash
-SHELL_VER="--- Aurora-Shell v5.4.0 installer---"
-# VERSION: 5.4.0
+SHELL_VER="--- Aurora-Shell v5.5.0 installer---"
+# VERSION: 5.5.0
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
@@ -10,6 +10,7 @@ THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
+VER="5.5.0"
 
 echo -e "removing old version"
 rm -rf "$OLD_SHELL"
@@ -92,7 +93,7 @@ run_wizard() {
     read P_ID
 
     cat << EOF > "$CONFIG_FILE"
-AURORA_VER="5.4.0"
+AURORA_VER="$VER"
 AURORA_PW="${NEW_PW:-$AURORA_PW}"
 AURORA_HDR_MODE="$HDR_MODE"
 AURORA_HDR_VAL="$HDR_VAL"
