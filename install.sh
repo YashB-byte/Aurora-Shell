@@ -4,12 +4,13 @@ SHELL_VER="--- Aurora-Shell v5.4.0 installer---"
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
+OLD_SHELL="$HOME/.aurora-shell_files"
 DATA_DIR="$HOME/.aurora-shell_files"
 THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
-
+rm -rf "$OLD_SHELL"
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
 
