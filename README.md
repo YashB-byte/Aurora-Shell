@@ -27,13 +27,8 @@ Cross-Platform: Tailored experiences for both Mac and Windows environments.
 
 **Option 2: Command Line Install**
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/YashB-Byte/Aurora-Shell/main/install.sh)
 ```
-or for dev branch:
-```bash
-bash <(curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/dev/install.sh)
-```
-run with "```-v```" at the end of command to see everything that is going on
 
 🪟 For Windows (PowerShell 7+)
 
@@ -52,7 +47,7 @@ winget install Microsoft.PowerShell.Preview
 
 **Option 1: command line install**
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/install.ps1'))
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/YashB-Byte/Aurora-Shell/main/install.ps1'))
 ```
 
 **Option 2: download installer (.exe)**
