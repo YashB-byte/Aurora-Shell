@@ -284,6 +284,7 @@ echo "source $THEME_FILE" >> "$HOME/.zshrc"
 
 echo "🌀 Checking Aurora-shell..."
 
+cd "$HOME"
 # Search the entire home folder for a REAL Aurora-shell Git repo
 FOUND_REPO=$(find "$HOME" -maxdepth 10 -type d -name "aurora-shell" 2>/dev/null | while read -r dir; do
     if [ -d "$dir/.git" ]; then
@@ -311,7 +312,3 @@ cd "$HOME"
 echo -e "\n\033[1;32m✅ v5.4.0 Deployed. 🛠️Xcode installed.\033[0m"
 
 echo "welcome to Aurora-Shell" | safe_lolcat
-
-echo "sourcing Aurora-shell..." | safe_lolcat
-
-source "~/.zshrc"
