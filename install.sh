@@ -12,10 +12,10 @@ REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
 VER="5.5.0"
 
-echo -e "removing old version"
+echo -e "removing old version" | lolcat
 rm -rf "$OLD_SHELL"
 
-echo -e "Making "$DATA_DIR" "
+echo -e "Making "$DATA_DIR" " | lolcat
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
 
