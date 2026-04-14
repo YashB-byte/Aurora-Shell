@@ -1,5 +1,5 @@
 #!/bin/bash
-SHELL_VER="--- Aurora-Shell v5.4.0 ---"
+SHELL_VER="--- Aurora-Shell v5.4.0 installer---"
 # VERSION: 5.4.0
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
@@ -13,7 +13,7 @@ GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
 
-echo " "$SHELL_VER" installer" | lolcat
+echo "$SHELL_VER" | lolcat
 
 # --- SYNC ENVIRONMENT ---
 sync_env() {
