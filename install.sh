@@ -1,5 +1,5 @@
 #!/bin/bash
-SHELL_VER="--- Aurora-Shell v5.5.2 installer---"
+SHELL_VER="--- Aurora-Shell v5.5.3 installer---"
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
@@ -9,7 +9,7 @@ THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
-VER="5.5.2"
+VER="5.5.3"
 
 echo -e "removing old version" | lolcat
 rm -rf "$OLD_SHELL"
@@ -19,6 +19,11 @@ mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
 
 echo "$SHELL_VER" | lolcat
+
+# -- HELPER: SAFE LOLCAT --
+safe_lolcat() {
+    if command -v lolcat &> /dev/null; then command lolcat; else cat; fi
+}
 
 # --- SYNC ENVIRONMENT ---
 sync_env() {
