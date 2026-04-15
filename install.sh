@@ -3,11 +3,6 @@ SHELL_VER="--- Aurora-Shell v5.5.0 installer---"
 # VERSION: 5.5.0
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
-# -- HELPER: SAFE LOLCAT --
-safe_lolcat() {
-    if command -v lolcat &> /dev/null; then command lolcat; else cat; fi
-}
-
 # --- PATH CONFIGURATION ---
 OLD_SHELL="$HOME/.aurora-shell_files"
 DATA_DIR="$HOME/.aurora-shell_files"
@@ -17,14 +12,19 @@ REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
 VER="5.5.0"
 
-echo -e "removing old version" | safe_lolcat
+echo -e "removing old version" | lolcat
 rm -rf "$OLD_SHELL"
 
-echo -e "Making "$DATA_DIR" " | safe_lolcat
+echo -e "Making "$DATA_DIR" " | lolcat
 mkdir -p "$DATA_DIR"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
 
-echo "$SHELL_VER" | safe_lolcat
+echo "$SHELL_VER" | lolcat
+
+# -- HELPER: SAFE LOLCAT --
+safe_lolcat() {
+    if command -v lolcat &> /dev/null; then command lolcat; else cat; fi
+}
 
 # --- SYNC ENVIRONMENT ---
 sync_env() {

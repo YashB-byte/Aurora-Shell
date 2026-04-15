@@ -112,7 +112,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C37046042F79A36500603593 /* Build configuration list for PBXProject "Aurora-Shell" */;
+			buildConfigurationList = C37046042F79A36500603593 /* Build configuration list for PBXProject "Aurora-shell" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -363,7 +363,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C37046042F79A36500603593 /* Build configuration list for PBXProject "Aurora-Shell" */ = {
+		C37046042F79A36500603593 /* Build configuration list for PBXProject "Aurora-shell" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C37046122F79A36700603593 /* Debug */,
