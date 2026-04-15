@@ -1,5 +1,5 @@
 #!/bin/bash
-SHELL_VER="--- Aurora-Shell v5.5.0 installer---"
+SHELL_VER="--- Aurora-Shell v5.5.1 installer---"
 # VERSION: 5.5.0
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
@@ -10,7 +10,7 @@ THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
-VER="5.5.0"
+VER="5.5.1"
 
 echo -e "removing old version" | lolcat
 rm -rf "$OLD_SHELL"
@@ -166,7 +166,7 @@ authenticate_user() {
      ║     AURORA-SHELL SECURITY TERMINAL     ║
      ╚════════════════════════════════════════╝" | safe_lolcat
     while true; do
-        echo -ne "[AUTH] Key: "
+        echo -ne "[AUTH] Key: " | safe_lolcat
         if ! read -s in_pw; then
             echo ""
             echo "DENIED"
