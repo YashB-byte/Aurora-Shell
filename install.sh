@@ -131,11 +131,11 @@ install_xcode_if_needed() {
         return
     fi
 
-    echo "⚠ Xcode not found — attempting installation..."
+    echo "⚠ Xcode not found — attempting installation...(press Ctrl+C to cancel)"
 
     # Ensure Homebrew exists
     if ! command -v brew &> /dev/null; then
-        echo "⚠ Homebrew missing — installing Homebrew..."
+        echo "⚠ Homebrew missing — installing Homebrew...(press Ctrl+C to cancel)"
         mkdir -p "$HOME/.brew"
         curl -L https://github.com/Homebrew/brew/tarball/master \
             | tar xz --strip 1 -C "$HOME/.brew"
@@ -144,8 +144,8 @@ install_xcode_if_needed() {
 
     # Try installing full Xcode via cask (requires App Store download)
     if brew info --cask xcode >/dev/null 2>&1; then
-        echo "⬇ Installing Xcode via Homebrew Cask (this may open the App Store)..."
-        brew install --cask xcode || true
+        echo "⬇ Installing Xcode via App store..."
+        open https://apps.apple.com/us/app/xcode/id497799835?mt=12 || true
     fi
 
     # Fallback: ensure Command Line Tools are installed
