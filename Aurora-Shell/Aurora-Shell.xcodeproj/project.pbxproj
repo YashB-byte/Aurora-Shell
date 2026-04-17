@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C3D8A15F2F8D56CA00B9DD74 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = C3D8A15E2F8D56CA00B9DD74 /* SwiftTerm */; };
-		C3D8A1612F8D56CA00B9DD74 /* SwiftTermFuzz in Frameworks */ = {isa = PBXBuildFile; productRef = C3D8A1602F8D56CA00B9DD74 /* SwiftTermFuzz */; };
-		C3D8A1632F8D56CA00B9DD74 /* termcast in Frameworks */ = {isa = PBXBuildFile; productRef = C3D8A1622F8D56CA00B9DD74 /* termcast */; };
+		C3D8A15F2F8D56CA00B9DD74 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = C3D8A15E2F8D56CA00B9DD74 /* SwiftTerm */; platformFilter = macos; };
+		C3D8A1612F8D56CA00B9DD74 /* SwiftTermFuzz in Frameworks */ = {isa = PBXBuildFile; productRef = C3D8A1602F8D56CA00B9DD74 /* SwiftTermFuzz */; platformFilter = macos; };
+		C3D8A1632F8D56CA00B9DD74 /* termcast in Frameworks */ = {isa = PBXBuildFile; productRef = C3D8A1622F8D56CA00B9DD74 /* termcast */; platformFilter = macos; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
