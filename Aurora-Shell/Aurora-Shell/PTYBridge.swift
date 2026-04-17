@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 import Darwin
 
@@ -17,3 +18,4 @@ func spawnShellWithPTY(shellPath: String = "/bin/zsh", cols: Int = 80, rows: Int
     }
     return masterFD
 }
+#endif

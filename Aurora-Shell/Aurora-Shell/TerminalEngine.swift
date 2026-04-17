@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 import Combine
 import Darwin
@@ -35,3 +36,4 @@ final class TerminalEngine: ObservableObject {
         _ = data.withUnsafeBytes { write(masterFD, $0.baseAddress, data.count) }
     }
 }
+#endif

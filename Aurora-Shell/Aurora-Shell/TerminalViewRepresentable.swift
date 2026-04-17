@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 import SwiftTerm
 import Combine
@@ -45,3 +46,4 @@ struct TerminalViewRepresentable: NSViewRepresentable {
         func rangeChanged(source: TerminalView, startY: Int, endY: Int) {}
     }
 }
+#endif

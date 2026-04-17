@@ -1,3 +1,4 @@
+#if os(macOS)
 import Foundation
 import Combine
 
@@ -23,3 +24,4 @@ final class ShellViewModel: ObservableObject {
         engine.sendRaw((command + "\n").data(using: .utf8)!)
     }
 }
+#endif
