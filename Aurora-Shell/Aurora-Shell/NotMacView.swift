@@ -30,14 +30,17 @@ struct NotMacView: View {
                 }
 
                 HStack {
-                    Text("\(shell.cwd.lastPathComponent)%")
+                    Text("\(shell.cwd.lastPathComponent) %")
                         .font(.system(.footnote, design: .monospaced))
-                        .foregroundStyle(.green.opacity(0.8))
-                    TextField("", text: $input)
+                        .foregroundStyle(.green)
+                        .fixedSize()
+                    TextField("command", text: $input)
                         .font(.system(.footnote, design: .monospaced))
                         .foregroundStyle(.green)
                         .tint(.green)
                         .focused($focused)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
                         .onSubmit {
                             shell.run(input)
                             input = ""
@@ -51,7 +54,8 @@ struct NotMacView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.15), lineWidth: 1))
             .padding(12)
         }
-        .ignoresSafeArea()
+        .ignoresSafeArea(.container, regions: .all)
+        .ignoresSafeArea(.keyboard, regions: .bottom)
         .onAppear { focused = true }
     }
 }

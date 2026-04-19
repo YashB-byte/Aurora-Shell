@@ -1,5 +1,6 @@
 #if !os(macOS)
 import Foundation
+import Combine
 
 final class SandboxedShell: ObservableObject {
     @Published var output: [String] = []
@@ -13,7 +14,7 @@ final class SandboxedShell: ObservableObject {
         cwd = root
         try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         output.append("Aurora Shell \u{26A1} Sandboxed FS — type 'help' for commands")
-        output.append("cwd: \(root.path)")
+        output.append("cwd: ~/aurora-shell")
     }
 
     func run(_ input: String) {

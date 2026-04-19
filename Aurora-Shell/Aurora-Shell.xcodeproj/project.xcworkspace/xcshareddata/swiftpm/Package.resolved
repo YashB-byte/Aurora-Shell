@@ -4,7 +4,7 @@
     {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-argument-parser.git",
+      "location" : "https://github.com/apple/swift-argument-parser",
       "state" : {
         "revision" : "626b5b7b2f45e1b0b1c6f4a309296d1d21d7311b",
         "version" : "1.7.1"
@@ -16,7 +16,7 @@
       "location" : "https://github.com/migueldeicaza/SwiftTerm",
       "state" : {
         "branch" : "main",
-        "revision" : "272fdc9cde4ab9a0a76863580a6b2e27b6b913a4"
+        "revision" : "f37922e49067c26f0b0cbabc7131b3f02862a7b5"
       }
     }
   ],
