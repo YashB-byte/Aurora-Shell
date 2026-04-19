@@ -7,7 +7,7 @@ struct NotMacView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             LiquidBackground()
 
             VStack(spacing: 0) {
@@ -25,7 +25,7 @@ struct NotMacView: View {
                         .id("bottom")
                     }
                     .onChange(of: shell.output.count) { _, _ in
-                        proxy.scrollTo("bottom", anchor: .bottom)
+                        withAnimation { proxy.scrollTo("bottom", anchor: .bottom) }
                     }
                 }
 
@@ -47,16 +47,21 @@ struct NotMacView: View {
                         }
                 }
                 .padding(12)
-                .background(.black.opacity(0.4))
+                .background(.black.opacity(0.6))
             }
             .background(.ultraThinMaterial.opacity(0.6))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.15), lineWidth: 1))
             .padding(12)
         }
-        .ignoresSafeArea(.container, regions: .all)
-        .ignoresSafeArea(.keyboard, regions: .bottom)
+        .ignoresSafeArea(.keyboard)
         .onAppear { focused = true }
+        .sheet(item: $shell.editorURL) { url in
+            EditorView(url: url) { shell.editorURL = nil }
+        }
+        .sheet(item: $shell.viewerURL) { url in
+            FileViewerView(url: url) { shell.viewerURL = nil }
+        }
     }
 }
 #endif
