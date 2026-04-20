@@ -18,7 +18,7 @@ Cross-Platform: Tailored experiences for both Mac and Windows environments.
 2. Open the .dmg file
 3. Open Terminal and run:
    ```bash
-   cp '/Volumes/Aurora-Shell for Mac' ~/downloads && xattr -d com.apple.quarantine ~/Downloads/Aurora-Shell.app && open ~/downloads/Aurora-Shell.app
+   cp '/Volumes/Aurora-Shell for Mac/Aurora-Shell.app' ~/downloads && xattr -d com.apple.quarantine ~/Downloads/Aurora-Shell.app && open ~/downloads/Aurora-Shell.app
    ```
 4. Follow the installer prompts
 5. Restart your terminal
