@@ -13,7 +13,14 @@ Cross-Platform: Tailored experiences for both Mac and Windows environments.
 
 🍎 For macOS (Zsh)
 
-**Option 1: Download Installer (.dmg)**
+**Option 1: Download macOS App (.dmg)**
+1. Download the latest Aurora-Shell.dmg
+2. Mount the DMG and install:
+   ```bash
+   cp -R '/Volumes/Aurora-Shell for Mac/Aurora-Shell.app' ~/Applications && xattr -d com.apple.quarantine ~/Applications/Aurora-Shell.app && open ~/Applications/Aurora-Shell.app
+   ```
+
+**Option 2: Download Theme Installer (.dmg)**
 1. Download the latest [AuroraShell.dmg](https://github.com/YashB-byte/aurora-shell-2/releases/latest)
 2. Open the .dmg file
 3. Open Terminal and run:
