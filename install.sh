@@ -261,6 +261,79 @@ shell.aurora() {
 }
 alias aurora="shell.aurora"
 
+# --- SHELL PACKAGE MANAGER ---
+PACKAGES_FILE="$HOME/.aurora-shell_files/packages.json"
+INSTALLED_DIR="$HOME/.aurora-shell_files/bin"
+mkdir -p "$INSTALLED_DIR"
+export PATH="$INSTALLED_DIR:$PATH"
+
+if [ ! -f "$PACKAGES_FILE" ]; then
+    cat > "$PACKAGES_FILE" << 'PKGEOF'
+{
+  "packages": {
+    "aurora-app": {
+      "url": "https://github.com/YashB-byte/Aurora-Shell/releases/latest/download/Aurora-Shell.dmg",
+      "type": "dmg",
+      "description": "Aurora Shell Terminal App"
+    }
+  }
+}
+PKGEOF
+fi
+
+shell() {
+    case "$1" in
+        install)
+            local pkg="$2"
+            local url=$(jq -r ".packages[\"$pkg\"].url" "$PACKAGES_FILE" 2>/dev/null)
+            local type=$(jq -r ".packages[\"$pkg\"].type" "$PACKAGES_FILE" 2>/dev/null)
+            [ "$url" = "null" ] && echo "❌ Package not found" && return 1
+            echo "📦 Installing $pkg..."
+            case "$type" in
+                dmg)
+                    local tmp="/tmp/$pkg.dmg"
+                    curl -L "$url" -o "$tmp"
+                    hdiutil attach "$tmp" -quiet
+                    local vol=$(ls /Volumes | grep -v Macintosh | head -1)
+                    cp -R "/Volumes/$vol"/*.app ~/Applications/ 2>/dev/null
+                    hdiutil detach "/Volumes/$vol" -quiet
+                    rm "$tmp"
+                    echo "✅ Installed to ~/Applications"
+                    ;;
+                binary)
+                    curl -L "$url" -o "$INSTALLED_DIR/$pkg"
+                    chmod +x "$INSTALLED_DIR/$pkg"
+                    echo "✅ Installed to $INSTALLED_DIR"
+                    ;;
+                brew)
+                    brew install "$pkg"
+                    ;;
+            esac
+            ;;
+        search)
+            echo "📋 Available packages:"
+            jq -r '.packages | to_entries[] | "  \(.key) - \(.value.description)"' "$PACKAGES_FILE" 2>/dev/null
+            ;;
+        list)
+            echo "📦 Installed:"
+            ls -1 "$INSTALLED_DIR" 2>/dev/null || echo "  (none)"
+            ;;
+        add)
+            local tmp=$(mktemp)
+            jq ".packages[\"$2\"] = {\"url\": \"$3\", \"type\": \"${4:-binary}\", \"description\": \"${5:-Custom}\"}" "$PACKAGES_FILE" > "$tmp" 2>/dev/null
+            mv "$tmp" "$PACKAGES_FILE"
+            echo "✅ Added $2"
+            ;;
+        remove)
+            rm -f "$INSTALLED_DIR/$2"
+            echo "✅ Removed $2"
+            ;;
+        *)
+            echo "Usage: shell install|search|list|add|remove"
+            ;;
+    esac
+}
+
 rainbow_prompt() {
   local raw_text="${AURORA_ID} %n@%m %* > "
   local expanded_text=$(print -P "$raw_text")
