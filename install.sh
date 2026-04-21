@@ -287,7 +287,19 @@ shell() {
             local pkg="$2"
             local url=$(jq -r ".packages[\"$pkg\"].url" "$PACKAGES_FILE" 2>/dev/null)
             local type=$(jq -r ".packages[\"$pkg\"].type" "$PACKAGES_FILE" 2>/dev/null)
-            [ "$url" = "null" ] && echo "❌ Package not found" && return 1
+            
+            if [ "$url" = "null" ]; then
+                echo "🔍 Not in Aurora registry. Searching Homebrew..."
+                if brew info "$pkg" &>/dev/null; then
+                    echo "📦 Found in Homebrew: $pkg"
+                    read -p "Install via brew? (y/n): " confirm
+                    [ "$confirm" = "y" ] && brew install "$pkg" && echo "✅ Installed via Homebrew"
+                else
+                    echo "❌ Package not found in Aurora or Homebrew"
+                fi
+                return
+            fi
+            
             echo "📦 Installing $pkg..."
             case "$type" in
                 dmg)
@@ -311,18 +323,29 @@ shell() {
             esac
             ;;
         search)
-            echo "📋 Available packages:"
+            echo "📋 Aurora packages:"
             jq -r '.packages | to_entries[] | "  \(.key) - \(.value.description)"' "$PACKAGES_FILE" 2>/dev/null
+            if [ -n "$2" ]; then
+                echo ""
+                echo "🍺 Homebrew results:"
+                brew search "$2" 2>/dev/null | head -10
+            fi
             ;;
         list)
             echo "📦 Installed:"
             ls -1 "$INSTALLED_DIR" 2>/dev/null || echo "  (none)"
             ;;
         add)
-            local tmp=$(mktemp)
-            jq ".packages[\"$2\"] = {\"url\": \"$3\", \"type\": \"${4:-binary}\", \"description\": \"${5:-Custom}\"}" "$PACKAGES_FILE" > "$tmp" 2>/dev/null
-            mv "$tmp" "$PACKAGES_FILE"
-            echo "✅ Added $2"
+            echo "📝 Add package: $2"
+            echo "URL: $3"
+            echo "Type: ${4:-binary}"
+            read -p "⚠️  Requires approval. Contact maintainer to add this package. Continue anyway? (y/n): " confirm
+            if [ "$confirm" = "y" ]; then
+                local tmp=$(mktemp)
+                jq ".packages[\"$2\"] = {\"url\": \"$3\", \"type\": \"${4:-binary}\", \"description\": \"${5:-Custom}\"}" "$PACKAGES_FILE" > "$tmp" 2>/dev/null
+                mv "$tmp" "$PACKAGES_FILE"
+                echo "✅ Added $2 locally (not in official registry)"
+            fi
             ;;
         remove)
             rm -f "$INSTALLED_DIR/$2"
