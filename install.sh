@@ -1,5 +1,5 @@
 #!/bin/bash
-SHELL_VER="--- Aurora-Shell v5.5.5 installer---"
+SHELL_VER="--- Aurora-Shell v5.5.6 installer---"
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
@@ -9,7 +9,7 @@ THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
-VER="5.5.5"
+VER="5.5.6"
 
 echo -e "removing old version" | lolcat
 rm -rf "$OLD_SHELL"
@@ -275,6 +275,11 @@ if [ ! -f "$PACKAGES_FILE" ]; then
       "url": "https://github.com/YashB-byte/Aurora-Shell/releases/latest/download/Aurora-Shell.dmg",
       "type": "dmg",
       "description": "Aurora Shell Terminal App"
+    },
+    "CLI": {
+      "url": "install-cli",
+      "type": "cli-installer",
+      "description": "Aurora-Shell CLI - Install CLI versions of apps (GitHub, Teams, etc)"
     }
   }
 }
@@ -320,6 +325,76 @@ shell() {
                     ;;
                 brew)
                     brew install "$pkg"
+                    ;;
+                cli-installer)
+                    echo "📦 Installing Aurora-Shell CLI..."
+                    cat > "$INSTALLED_DIR/CLI" << 'CLIEOF'
+#!/bin/zsh
+CLI_PACKAGES_FILE="$HOME/.aurora-shell_files/cli-packages.json"
+
+if [ ! -f "$CLI_PACKAGES_FILE" ]; then
+    cat > "$CLI_PACKAGES_FILE" << 'CLIPKG'
+{
+  "packages": {
+    "GitHub": {
+      "command": "gh",
+      "install": "brew install gh",
+      "description": "GitHub CLI - official GitHub command line tool"
+    },
+    "Microsoft.Teams": {
+      "command": "teams-cli",
+      "install": "echo 'Teams CLI not yet available - coming soon'",
+      "description": "Microsoft Teams CLI (coming soon)"
+    }
+  }
+}
+CLIPKG
+fi
+
+case "$1" in
+    install)
+        pkg="$2"
+        install_cmd=$(jq -r ".packages[\"$pkg\"].install" "$CLI_PACKAGES_FILE" 2>/dev/null)
+        cmd_name=$(jq -r ".packages[\"$pkg\"].command" "$CLI_PACKAGES_FILE" 2>/dev/null)
+        
+        if [ "$install_cmd" = "null" ]; then
+            echo "❌ CLI package '$pkg' not found"
+            echo "Available: $(jq -r '.packages | keys[]' "$CLI_PACKAGES_FILE" 2>/dev/null | tr '\n' ' ')"
+            exit 1
+        fi
+        
+        echo "📦 Installing $pkg CLI..."
+        eval "$install_cmd"
+        
+        if command -v "$cmd_name" &>/dev/null; then
+            echo "✅ $pkg CLI installed: $cmd_name"
+        fi
+        ;;
+    list)
+        echo "📋 Available CLI packages:"
+        jq -r '.packages | to_entries[] | "  \(.key) (\(.value.command)) - \(.value.description)"' "$CLI_PACKAGES_FILE" 2>/dev/null
+        ;;
+    search)
+        echo "🔍 Searching CLI packages for: $2"
+        jq -r ".packages | to_entries[] | select(.key | contains(\"$2\")) | \"  \(.key) (\(.value.command)) - \(.value.description)\"" "$CLI_PACKAGES_FILE" 2>/dev/null
+        ;;
+    *)
+        echo "Aurora-Shell CLI Installer"
+        echo ""
+        echo "Usage:"
+        echo "  CLI install <package>  - Install CLI version of an app"
+        echo "  CLI list               - List available CLI packages"
+        echo "  CLI search <query>     - Search CLI packages"
+        echo ""
+        echo "Examples:"
+        echo "  CLI install GitHub"
+        echo "  CLI install Microsoft.Teams"
+        ;;
+esac
+CLIEOF
+                    chmod +x "$INSTALLED_DIR/CLI"
+                    echo "✅ CLI command installed"
+                    echo "Usage: CLI install GitHub"
                     ;;
             esac
             ;;
