@@ -1,5 +1,5 @@
 #!/bin/bash
-SHELL_VER="--- Aurora-Shell v5.5.4 installer---"
+SHELL_VER="--- Aurora-Shell v5.5.5 installer---"
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
@@ -9,7 +9,7 @@ THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
-VER="5.5.4"
+VER="5.5.5"
 
 echo -e "removing old version" | lolcat
 rm -rf "$OLD_SHELL"
@@ -292,7 +292,8 @@ shell() {
                 echo "🔍 Not in Aurora registry. Searching Homebrew..."
                 if brew info "$pkg" &>/dev/null; then
                     echo "📦 Found in Homebrew: $pkg"
-                    read -p "Install via brew? (y/n): " confirm
+                    echo -n "Install via brew? (y/n): "
+                    read confirm
                     [ "$confirm" = "y" ] && brew install "$pkg" && echo "✅ Installed via Homebrew"
                 else
                     echo "❌ Package not found in Aurora or Homebrew"
@@ -336,15 +337,34 @@ shell() {
             ls -1 "$INSTALLED_DIR" 2>/dev/null || echo "  (none)"
             ;;
         add)
-            echo "📝 Add package: $2"
-            echo "URL: $3"
-            echo "Type: ${4:-binary}"
-            read -p "⚠️  Requires approval. Contact maintainer to add this package. Continue anyway? (y/n): " confirm
+            echo "📝 Package submission:"
+            echo "  Name: $2"
+            echo "  URL: $3"
+            echo "  Type: ${4:-binary}"
+            echo "  Description: ${5:-Custom package}"
+            echo ""
+            echo -n "Submit for approval? (y/n): "
+            read confirm
             if [ "$confirm" = "y" ]; then
-                local tmp=$(mktemp)
-                jq ".packages[\"$2\"] = {\"url\": \"$3\", \"type\": \"${4:-binary}\", \"description\": \"${5:-Custom}\"}" "$PACKAGES_FILE" > "$tmp" 2>/dev/null
-                mv "$tmp" "$PACKAGES_FILE"
-                echo "✅ Added $2 locally (not in official registry)"
+                echo "📤 Sending approval request..."
+                curl -s -X POST "https://api.github.com/repos/YashB-byte/Aurora-Shell/issues" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"title\":\"Package Request: $2\",\"body\":\"**Package Name:** $2\n**URL:** $3\n**Type:** ${4:-binary}\n**Description:** ${5:-Custom package}\n\n---\nSubmitted via shell add command\",\"labels\":[\"package-request\"]}" \
+                    >/dev/null 2>&1
+                
+                if [ $? -eq 0 ]; then
+                    echo "✅ Request submitted. You'll be notified when approved."
+                    echo "   Track at: https://github.com/YashB-byte/Aurora-Shell/issues"
+                else
+                    echo "⚠️  Could not submit request. Add manually to local registry? (y/n): "
+                    read local_add
+                    if [ "$local_add" = "y" ]; then
+                        local tmp=$(mktemp)
+                        jq ".packages[\"$2\"] = {\"url\": \"$3\", \"type\": \"${4:-binary}\", \"description\": \"${5:-Custom}\"}" "$PACKAGES_FILE" > "$tmp" 2>/dev/null
+                        mv "$tmp" "$PACKAGES_FILE"
+                        echo "✅ Added $2 locally (not in official registry)"
+                    fi
+                fi
             fi
             ;;
         remove)
