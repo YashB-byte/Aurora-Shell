@@ -337,6 +337,29 @@ shell() {
             ls -1 "$INSTALLED_DIR" 2>/dev/null || echo "  (none)"
             ;;
         add)
+            if [ -z "$2" ]; then
+                echo "❌ Missing package name"
+                echo ""
+                echo "Usage: shell add <package-name> <download-url> [type] [description]"
+                echo ""
+                echo "Examples:"
+                echo "  shell add my-tool https://example.com/tool.zip binary 'My custom tool'"
+                echo "  shell add my-app https://example.com/app.dmg dmg 'My application'"
+                echo ""
+                echo "Types: binary, dmg, brew"
+                return 1
+            fi
+            
+            if [ -z "$3" ]; then
+                echo "❌ Missing download URL"
+                echo ""
+                echo "Usage: shell add $2 <download-url> [type] [description]"
+                echo ""
+                echo "Example:"
+                echo "  shell add $2 https://example.com/$2.zip binary 'Description here'"
+                return 1
+            fi
+            
             echo "📝 Package submission:"
             echo "  Name: $2"
             echo "  URL: $3"
@@ -346,25 +369,15 @@ shell() {
             echo -n "Submit for approval? (y/n): "
             read confirm
             if [ "$confirm" = "y" ]; then
-                echo "📤 Sending approval request..."
-                curl -s -X POST "https://api.github.com/repos/YashB-byte/Aurora-Shell/issues" \
-                    -H "Content-Type: application/json" \
-                    -d "{\"title\":\"Package Request: $2\",\"body\":\"**Package Name:** $2\n**URL:** $3\n**Type:** ${4:-binary}\n**Description:** ${5:-Custom package}\n\n---\nSubmitted via shell add command\",\"labels\":[\"package-request\"]}" \
-                    >/dev/null 2>&1
-                
-                if [ $? -eq 0 ]; then
-                    echo "✅ Request submitted. You'll be notified when approved."
-                    echo "   Track at: https://github.com/YashB-byte/Aurora-Shell/issues"
-                else
-                    echo "⚠️  Could not submit request. Add manually to local registry? (y/n): "
-                    read local_add
-                    if [ "$local_add" = "y" ]; then
-                        local tmp=$(mktemp)
-                        jq ".packages[\"$2\"] = {\"url\": \"$3\", \"type\": \"${4:-binary}\", \"description\": \"${5:-Custom}\"}" "$PACKAGES_FILE" > "$tmp" 2>/dev/null
-                        mv "$tmp" "$PACKAGES_FILE"
-                        echo "✅ Added $2 locally (not in official registry)"
-                    fi
-                fi
+                echo "📤 Adding to local registry..."
+                local tmp=$(mktemp)
+                jq ".packages[\"$2\"] = {\"url\": \"$3\", \"type\": \"${4:-binary}\", \"description\": \"${5:-Custom}\"}" "$PACKAGES_FILE" > "$tmp" 2>/dev/null
+                mv "$tmp" "$PACKAGES_FILE"
+                echo "✅ Added $2 locally"
+                echo ""
+                echo "🌐 Opening approval form in browser..."
+                local issue_url="https://github.com/YashB-byte/Aurora-Shell/issues/new?title=Package%20Request:%20$2&body=**Package%20Name:**%20$2%0A**URL:**%20$3%0A**Type:**%20${4:-binary}%0A**Description:**%20${5:-Custom}%0A%0A----%0ASubmitted%20via%20shell%20add%20command"
+                open "$issue_url" 2>/dev/null || xdg-open "$issue_url" 2>/dev/null || echo "Visit: $issue_url"
             fi
             ;;
         remove)
