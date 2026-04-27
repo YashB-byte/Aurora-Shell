@@ -1,5 +1,5 @@
 #!/bin/bash
-SHELL_VER="--- Aurora-Shell v5.5.7 installer---"
+SHELL_VER="--- Aurora-Shell v5.5.8 installer---"
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
@@ -9,7 +9,7 @@ THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
-VER="5.5.7"
+VER="5.5.8"
 
 echo -e "removing old version" | lolcat
 rm -rf "$OLD_SHELL"
@@ -271,15 +271,17 @@ if [ ! -f "$PACKAGES_FILE" ]; then
     cat > "$PACKAGES_FILE" << 'PKGEOF'
 {
   "packages": {
-    "aurora-app": {
+    "Aurora.App": {
+      "aliases": ["aurora-app"],
       "url": "https://github.com/YashB-byte/Aurora-Shell/releases/latest/download/Aurora-Shell.dmg",
       "type": "dmg",
       "description": "Aurora Shell Terminal App"
     },
-    "CLI": {
+    "Aurora.CLI": {
+      "aliases": ["CLI"],
       "url": "install-cli",
       "type": "cli-installer",
-      "description": "Aurora-Shell CLI - Install CLI versions of apps (GitHub, Teams, etc)"
+      "description": "Aurora-Shell CLI - Install CLI versions of apps"
     }
   }
 }
@@ -290,6 +292,10 @@ shell() {
     case "$1" in
         install)
             local pkg="$2"
+            # Resolve alias to full ID
+            local resolved=$(jq -r ".packages | to_entries[] | select(.value.aliases? and (.value.aliases[] == \"$pkg\")) | .key" "$PACKAGES_FILE" 2>/dev/null | head -1)
+            [ -n "$resolved" ] && pkg="$resolved"
+            
             local url=$(jq -r ".packages[\"$pkg\"].url" "$PACKAGES_FILE" 2>/dev/null)
             local type=$(jq -r ".packages[\"$pkg\"].type" "$PACKAGES_FILE" 2>/dev/null)
             
@@ -336,136 +342,42 @@ if [ ! -f "$CLI_PACKAGES_FILE" ]; then
     cat > "$CLI_PACKAGES_FILE" << 'CLIPKG'
 {
   "packages": {
-    "GitHub": {"command": "gh", "install": "brew install gh", "description": "GitHub CLI"},
-    "AWS": {"command": "aws", "install": "brew install awscli", "description": "Amazon Web Services CLI"},
-    "Azure": {"command": "az", "install": "brew install azure-cli", "description": "Microsoft Azure CLI"},
-    "Google.Cloud": {"command": "gcloud", "install": "brew install google-cloud-sdk", "description": "Google Cloud CLI"},
-    "Docker": {"command": "docker", "install": "brew install docker", "description": "Docker container CLI"},
-    "Kubernetes": {"command": "kubectl", "install": "brew install kubectl", "description": "Kubernetes CLI"},
-    "Helm": {"command": "helm", "install": "brew install helm", "description": "Kubernetes package manager"},
-    "Heroku": {"command": "heroku", "install": "brew tap heroku/brew && brew install heroku", "description": "Heroku platform CLI"},
-    "Vercel": {"command": "vercel", "install": "npm install -g vercel", "description": "Vercel deployment CLI"},
-    "Netlify": {"command": "netlify", "install": "npm install -g netlify-cli", "description": "Netlify deployment CLI"},
-    "Firebase": {"command": "firebase", "install": "npm install -g firebase-tools", "description": "Firebase CLI"},
-    "Terraform": {"command": "terraform", "install": "brew install terraform", "description": "Infrastructure as code CLI"},
-    "Ansible": {"command": "ansible", "install": "brew install ansible", "description": "Automation CLI"},
-    "Pulumi": {"command": "pulumi", "install": "brew install pulumi", "description": "Infrastructure as code CLI"},
-    "Vagrant": {"command": "vagrant", "install": "brew install vagrant", "description": "Virtual machine CLI"},
-    "Slack": {"command": "slack", "install": "npm install -g @slack/cli", "description": "Slack workspace CLI"},
-    "Discord": {"command": "discord", "install": "npm install -g discord-cli", "description": "Discord CLI"},
-    "Twilio": {"command": "twilio", "install": "brew tap twilio/brew && brew install twilio", "description": "Twilio communications CLI"},
-    "Stripe": {"command": "stripe", "install": "brew install stripe/stripe-cli/stripe", "description": "Stripe payment CLI"},
-    "DigitalOcean": {"command": "doctl", "install": "brew install doctl", "description": "DigitalOcean CLI"},
-    "Linode": {"command": "linode-cli", "install": "brew install linode-cli", "description": "Linode cloud CLI"},
-    "Vultr": {"command": "vultr-cli", "install": "brew install vultr/vultr-cli/vultr-cli", "description": "Vultr cloud CLI"},
-    "MongoDB": {"command": "mongosh", "install": "brew install mongosh", "description": "MongoDB shell"},
-    "PostgreSQL": {"command": "psql", "install": "brew install postgresql", "description": "PostgreSQL CLI"},
-    "MySQL": {"command": "mysql", "install": "brew install mysql", "description": "MySQL CLI"},
-    "Redis": {"command": "redis-cli", "install": "brew install redis", "description": "Redis CLI"},
-    "Supabase": {"command": "supabase", "install": "brew install supabase/tap/supabase", "description": "Supabase CLI"},
-    "PlanetScale": {"command": "pscale", "install": "brew install planetscale/tap/pscale", "description": "PlanetScale database CLI"},
-    "Cloudflare": {"command": "wrangler", "install": "npm install -g wrangler", "description": "Cloudflare Workers CLI"},
-    "Notion": {"command": "notion", "install": "npm install -g @notionhq/client", "description": "Notion API CLI"},
-    "Jira": {"command": "jira", "install": "brew install ankitpokhrel/jira-cli/jira-cli", "description": "Jira project management CLI"},
-    "GitLab": {"command": "glab", "install": "brew install glab", "description": "GitLab CLI"},
-    "Bitbucket": {"command": "bb", "install": "npm install -g bitbucket-cli", "description": "Bitbucket CLI"},
-    "Shopify": {"command": "shopify", "install": "brew tap shopify/shopify && brew install shopify-cli", "description": "Shopify e-commerce CLI"},
-    "OpenAI": {"command": "openai", "install": "pip3 install openai", "description": "OpenAI API CLI"},
-    "Anthropic": {"command": "anthropic", "install": "pip3 install anthropic", "description": "Anthropic Claude CLI"},
-    "Hugging.Face": {"command": "huggingface-cli", "install": "pip3 install huggingface_hub", "description": "Hugging Face ML CLI"},
-    "Railway": {"command": "railway", "install": "npm install -g @railway/cli", "description": "Railway deployment CLI"},
-    "Fly.io": {"command": "flyctl", "install": "brew install flyctl", "description": "Fly.io deployment CLI"},
-    "Render": {"command": "render", "install": "npm install -g @render/cli", "description": "Render cloud CLI"},
-    "Deno": {"command": "deno", "install": "brew install deno", "description": "Deno runtime CLI"},
-    "Bun": {"command": "bun", "install": "brew install bun", "description": "Bun runtime CLI"},
-    "Node": {"command": "node", "install": "brew install node", "description": "Node.js runtime"},
-    "Python": {"command": "python3", "install": "brew install python", "description": "Python runtime"},
-    "Ruby": {"command": "ruby", "install": "brew install ruby", "description": "Ruby runtime"},
-    "Go": {"command": "go", "install": "brew install go", "description": "Go runtime"},
-    "Rust": {"command": "rustc", "install": "brew install rust", "description": "Rust compiler"},
-    "Java": {"command": "java", "install": "brew install openjdk", "description": "Java runtime"},
-    "PHP": {"command": "php", "install": "brew install php", "description": "PHP runtime"},
-    "Swift": {"command": "swift", "install": "xcode-select --install", "description": "Swift compiler"},
-    "Kotlin": {"command": "kotlin", "install": "brew install kotlin", "description": "Kotlin compiler"},
-    "Scala": {"command": "scala", "install": "brew install scala", "description": "Scala runtime"},
-    "Elixir": {"command": "elixir", "install": "brew install elixir", "description": "Elixir runtime"},
-    "Haskell": {"command": "ghc", "install": "brew install ghc", "description": "Haskell compiler"},
-    "Clojure": {"command": "clojure", "install": "brew install clojure", "description": "Clojure runtime"},
-    "Dart": {"command": "dart", "install": "brew install dart", "description": "Dart runtime"},
-    "Flutter": {"command": "flutter", "install": "brew install flutter", "description": "Flutter framework CLI"},
-    "React.Native": {"command": "react-native", "install": "npm install -g react-native-cli", "description": "React Native CLI"},
-    "Expo": {"command": "expo", "install": "npm install -g expo-cli", "description": "Expo React Native CLI"},
-    "Ionic": {"command": "ionic", "install": "npm install -g @ionic/cli", "description": "Ionic mobile CLI"},
-    "Capacitor": {"command": "cap", "install": "npm install -g @capacitor/cli", "description": "Capacitor mobile CLI"},
-    "Cordova": {"command": "cordova", "install": "npm install -g cordova", "description": "Cordova mobile CLI"},
-    "Fastlane": {"command": "fastlane", "install": "brew install fastlane", "description": "Mobile deployment CLI"},
-    "Cocoapods": {"command": "pod", "install": "brew install cocoapods", "description": "iOS dependency manager"},
-    "Carthage": {"command": "carthage", "install": "brew install carthage", "description": "iOS dependency manager"},
-    "Gradle": {"command": "gradle", "install": "brew install gradle", "description": "Build automation tool"},
-    "Maven": {"command": "mvn", "install": "brew install maven", "description": "Build automation tool"},
-    "Yarn": {"command": "yarn", "install": "brew install yarn", "description": "Package manager"},
-    "PNPM": {"command": "pnpm", "install": "brew install pnpm", "description": "Package manager"},
-    "NPM": {"command": "npm", "install": "brew install node", "description": "Node package manager"},
-    "Pip": {"command": "pip3", "install": "brew install python", "description": "Python package manager"},
-    "Cargo": {"command": "cargo", "install": "brew install rust", "description": "Rust package manager"},
-    "Composer": {"command": "composer", "install": "brew install composer", "description": "PHP package manager"},
-    "Bundler": {"command": "bundle", "install": "gem install bundler", "description": "Ruby package manager"},
-    "Poetry": {"command": "poetry", "install": "brew install poetry", "description": "Python dependency manager"},
-    "Pipenv": {"command": "pipenv", "install": "brew install pipenv", "description": "Python environment manager"},
-    "Conda": {"command": "conda", "install": "brew install miniconda", "description": "Python environment manager"},
-    "Homebrew": {"command": "brew", "install": "echo 'Already installed'", "description": "macOS package manager"},
-    "Nix": {"command": "nix", "install": "sh <(curl -L https://nixos.org/nix/install)", "description": "Package manager"},
-    "Snap": {"command": "snap", "install": "echo 'Not available on macOS'", "description": "Linux package manager"},
-    "APT": {"command": "apt", "install": "echo 'Not available on macOS'", "description": "Debian package manager"},
-    "YUM": {"command": "yum", "install": "echo 'Not available on macOS'", "description": "RedHat package manager"},
-    "Pacman": {"command": "pacman", "install": "echo 'Not available on macOS'", "description": "Arch package manager"},
-    "Vim": {"command": "vim", "install": "brew install vim", "description": "Text editor"},
-    "Neovim": {"command": "nvim", "install": "brew install neovim", "description": "Text editor"},
-    "Emacs": {"command": "emacs", "install": "brew install emacs", "description": "Text editor"},
-    "VSCode": {"command": "code", "install": "brew install visual-studio-code", "description": "Code editor CLI"},
-    "Sublime": {"command": "subl", "install": "brew install sublime-text", "description": "Text editor CLI"},
-    "Atom": {"command": "atom", "install": "brew install atom", "description": "Text editor CLI"},
-    "Tmux": {"command": "tmux", "install": "brew install tmux", "description": "Terminal multiplexer"},
-    "Screen": {"command": "screen", "install": "brew install screen", "description": "Terminal multiplexer"},
-    "Zellij": {"command": "zellij", "install": "brew install zellij", "description": "Terminal multiplexer"},
-    "Alacritty": {"command": "alacritty", "install": "brew install alacritty", "description": "Terminal emulator"},
-    "Kitty": {"command": "kitty", "install": "brew install kitty", "description": "Terminal emulator"},
-    "WezTerm": {"command": "wezterm", "install": "brew install wezterm", "description": "Terminal emulator"},
-    "FFmpeg": {"command": "ffmpeg", "install": "brew install ffmpeg", "description": "Media processing CLI"},
-    "ImageMagick": {"command": "convert", "install": "brew install imagemagick", "description": "Image processing CLI"},
-    "Pandoc": {"command": "pandoc", "install": "brew install pandoc", "description": "Document converter"},
-    "Wget": {"command": "wget", "install": "brew install wget", "description": "File downloader"},
-    "Curl": {"command": "curl", "install": "brew install curl", "description": "HTTP client"},
-    "HTTPie": {"command": "http", "install": "brew install httpie", "description": "HTTP client"},
-    "Postman": {"command": "postman", "install": "brew install postman", "description": "API testing CLI"},
-    "Insomnia": {"command": "insomnia", "install": "brew install insomnia", "description": "API testing CLI"},
-    "JQ": {"command": "jq", "install": "brew install jq", "description": "JSON processor"},
-    "YQ": {"command": "yq", "install": "brew install yq", "description": "YAML processor"},
-    "Bat": {"command": "bat", "install": "brew install bat", "description": "Cat with syntax highlighting"},
-    "Exa": {"command": "exa", "install": "brew install exa", "description": "Modern ls replacement"},
-    "Ripgrep": {"command": "rg", "install": "brew install ripgrep", "description": "Fast grep alternative"},
-    "FZF": {"command": "fzf", "install": "brew install fzf", "description": "Fuzzy finder"},
-    "FD": {"command": "fd", "install": "brew install fd", "description": "Fast find alternative"},
-    "Zoxide": {"command": "z", "install": "brew install zoxide", "description": "Smart cd command"},
-    "Starship": {"command": "starship", "install": "brew install starship", "description": "Shell prompt"},
-    "Oh.My.Zsh": {"command": "omz", "install": "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)\"", "description": "Zsh framework"},
-    "Powerlevel10k": {"command": "p10k", "install": "brew install powerlevel10k", "description": "Zsh theme"},
-    "Htop": {"command": "htop", "install": "brew install htop", "description": "Process viewer"},
-    "Btop": {"command": "btop", "install": "brew install btop", "description": "Resource monitor"},
-    "Glances": {"command": "glances", "install": "brew install glances", "description": "System monitor"},
-    "Ncdu": {"command": "ncdu", "install": "brew install ncdu", "description": "Disk usage analyzer"},
-    "Dust": {"command": "dust", "install": "brew install dust", "description": "Disk usage analyzer"},
-    "Duf": {"command": "duf", "install": "brew install duf", "description": "Disk usage viewer"},
-    "Lazygit": {"command": "lazygit", "install": "brew install lazygit", "description": "Git TUI"},
-    "Lazydocker": {"command": "lazydocker", "install": "brew install lazydocker", "description": "Docker TUI"},
-    "K9s": {"command": "k9s", "install": "brew install k9s", "description": "Kubernetes TUI"},
-    "Dive": {"command": "dive", "install": "brew install dive", "description": "Docker image explorer"},
-    "Ctop": {"command": "ctop", "install": "brew install ctop", "description": "Container metrics"},
-    "Glow": {"command": "glow", "install": "brew install glow", "description": "Markdown renderer"},
-    "Slides": {"command": "slides", "install": "brew install slides", "description": "Terminal presentations"},
-    "Asciinema": {"command": "asciinema", "install": "brew install asciinema", "description": "Terminal recorder"},
-    "Terminalizer": {"command": "terminalizer", "install": "npm install -g terminalizer", "description": "Terminal recorder"},
-    "Microsoft.Teams": {"command": "teams-cli", "install": "echo 'Teams CLI not yet available - coming soon'", "description": "Microsoft Teams CLI (coming soon)"}
+    "GitHub.CLI": {"aliases":["gh","github"],"command":"gh","version":"2.90.0","source":"brew","install":"brew install gh","description":"GitHub CLI"},
+    "Amazon.AWS": {"aliases":["aws"],"command":"aws","version":"2.x","source":"brew","install":"brew install awscli","description":"Amazon Web Services CLI"},
+    "Microsoft.Azure": {"aliases":["az","azure"],"command":"az","version":"2.x","source":"brew","install":"brew install azure-cli","description":"Microsoft Azure CLI"},
+    "Google.Cloud": {"aliases":["gcloud"],"command":"gcloud","version":"latest","source":"brew","install":"brew install google-cloud-sdk","description":"Google Cloud CLI"},
+    "Docker.CLI": {"aliases":["docker"],"command":"docker","version":"29.4.1","source":"brew","install":"brew install docker","description":"Docker container CLI"},
+    "Kubernetes.CLI": {"aliases":["kubectl","k8s"],"command":"kubectl","version":"1.35.4","source":"brew","install":"brew install kubectl","description":"Kubernetes CLI"},
+    "Helm.CLI": {"aliases":["helm"],"command":"helm","version":"4.1.4","source":"brew","install":"brew install helm","description":"Kubernetes package manager"},
+    "Heroku.CLI": {"aliases":["heroku"],"command":"heroku","version":"latest","source":"brew","install":"brew tap heroku/brew && brew install heroku","description":"Heroku platform CLI"},
+    "Vercel.CLI": {"aliases":["vercel","vc"],"command":"vercel","version":"latest","source":"npm","install":"npm install -g vercel","description":"Vercel deployment CLI"},
+    "Netlify.CLI": {"aliases":["netlify"],"command":"netlify","version":"latest","source":"npm","install":"npm install -g netlify-cli","description":"Netlify deployment CLI"},
+    "Google.Firebase": {"aliases":["firebase"],"command":"firebase","version":"latest","source":"npm","install":"npm install -g firebase-tools","description":"Firebase CLI"},
+    "HashiCorp.Terraform": {"aliases":["terraform","tf"],"command":"terraform","version":"1.x","source":"brew","install":"brew install terraform","description":"Infrastructure as code CLI"},
+    "RedHat.Ansible": {"aliases":["ansible"],"command":"ansible","version":"13.5.0","source":"brew","install":"brew install ansible","description":"Automation CLI"},
+    "Pulumi.CLI": {"aliases":["pulumi"],"command":"pulumi","version":"3.231.0","source":"brew","install":"brew install pulumi","description":"Infrastructure as code CLI"},
+    "Slack.CLI": {"aliases":["slack"],"command":"slack","version":"latest","source":"npm","install":"npm install -g @slack/cli","description":"Slack workspace CLI"},
+    "Twilio.CLI": {"aliases":["twilio"],"command":"twilio","version":"latest","source":"brew","install":"brew tap twilio/brew && brew install twilio","description":"Twilio communications CLI"},
+    "Stripe.CLI": {"aliases":["stripe"],"command":"stripe","version":"latest","source":"brew","install":"brew install stripe/stripe-cli/stripe","description":"Stripe payment CLI"},
+    "DigitalOcean.CLI": {"aliases":["doctl","digitalocean"],"command":"doctl","version":"1.155.0","source":"brew","install":"brew install doctl","description":"DigitalOcean CLI"},
+    "MongoDB.Shell": {"aliases":["mongosh","mongo"],"command":"mongosh","version":"2.8.2","source":"brew","install":"brew install mongosh","description":"MongoDB shell"},
+    "PostgreSQL.CLI": {"aliases":["psql","postgres"],"command":"psql","version":"18.3","source":"brew","install":"brew install postgresql","description":"PostgreSQL CLI"},
+    "MySQL.CLI": {"aliases":["mysql"],"command":"mysql","version":"9.6.0","source":"brew","install":"brew install mysql","description":"MySQL CLI"},
+    "Redis.CLI": {"aliases":["redis"],"command":"redis-cli","version":"8.6.2","source":"brew","install":"brew install redis","description":"Redis CLI"},
+    "Supabase.CLI": {"aliases":["supabase"],"command":"supabase","version":"latest","source":"brew","install":"brew install supabase/tap/supabase","description":"Supabase CLI"},
+    "Cloudflare.Wrangler": {"aliases":["wrangler","cf"],"command":"wrangler","version":"latest","source":"npm","install":"npm install -g wrangler","description":"Cloudflare Workers CLI"},
+    "Atlassian.Jira": {"aliases":["jira"],"command":"jira","version":"latest","source":"brew","install":"brew install ankitpokhrel/jira-cli/jira-cli","description":"Jira CLI"},
+    "GitLab.CLI": {"aliases":["glab","gitlab"],"command":"glab","version":"1.92.1","source":"brew","install":"brew install glab","description":"GitLab CLI"},
+    "Shopify.CLI": {"aliases":["shopify"],"command":"shopify","version":"latest","source":"brew","install":"brew tap shopify/shopify && brew install shopify-cli","description":"Shopify CLI"},
+    "OpenAI.CLI": {"aliases":["openai"],"command":"openai","version":"latest","source":"pip","install":"pip3 install openai","description":"OpenAI API CLI"},
+    "Anthropic.CLI": {"aliases":["anthropic","claude"],"command":"anthropic","version":"latest","source":"pip","install":"pip3 install anthropic","description":"Anthropic Claude CLI"},
+    "Railway.CLI": {"aliases":["railway"],"command":"railway","version":"latest","source":"npm","install":"npm install -g @railway/cli","description":"Railway deployment CLI"},
+    "Fly.CLI": {"aliases":["flyctl","fly"],"command":"flyctl","version":"0.4.38","source":"brew","install":"brew install flyctl","description":"Fly.io deployment CLI"},
+    "VS.Code": {"aliases":["code","vscode"],"command":"code","version":"latest","source":"brew","install":"brew install --cask visual-studio-code","description":"Visual Studio Code"},
+    "Neovim.CLI": {"aliases":["nvim","neovim"],"command":"nvim","version":"0.12.1","source":"brew","install":"brew install neovim","description":"Neovim editor"},
+    "Flutter.CLI": {"aliases":["flutter"],"command":"flutter","version":"3.41.7","source":"brew","install":"brew install flutter","description":"Flutter framework CLI"},
+    "Fastlane.CLI": {"aliases":["fastlane"],"command":"fastlane","version":"2.233.0","source":"brew","install":"brew install fastlane","description":"Mobile deployment CLI"},
+    "Microsoft.Teams": {"aliases":["teams"],"command":"teams","version":"1.0.0","source":"aurora","install":"cd ~/.aurora-shell_files && git clone https://github.com/YashB-byte/Aurora-Shell.git --no-checkout --depth 1 && cd Aurora-Shell && git checkout HEAD -- teams-cli && cd teams-cli && npm install && npm link","description":"Microsoft Teams CLI"}
   }
 }
 CLIPKG
@@ -474,6 +386,10 @@ fi
 case "$1" in
     install)
         pkg="$2"
+        # Resolve alias to full ID
+        local resolved=$(jq -r ".packages | to_entries[] | select(.value.aliases? and (.value.aliases[] == \"$pkg\")) | .key" "$CLI_PACKAGES_FILE" 2>/dev/null | head -1)
+        [ -n "$resolved" ] && pkg="$resolved"
+        
         install_cmd=$(jq -r ".packages[\"$pkg\"].install" "$CLI_PACKAGES_FILE" 2>/dev/null)
         cmd_name=$(jq -r ".packages[\"$pkg\"].command" "$CLI_PACKAGES_FILE" 2>/dev/null)
         
@@ -497,7 +413,13 @@ case "$1" in
     search)
         query=$(echo "$2" | tr '[:upper:]' '[:lower:]')
         echo "🔍 Searching CLI packages for: $2"
-        jq -r ".packages | to_entries[] | select(.key | ascii_downcase | contains(\"$query\")) | \"  \(.key) (\(.value.command)) - \(.value.description)\"" "$CLI_PACKAGES_FILE" 2>/dev/null
+        echo ""
+        printf "%-25s %-25s %-10s %s\n" "Name" "ID" "Version" "Source"
+        printf "%-25s %-25s %-10s %s\n" "-------------------------" "-------------------------" "----------" "------"
+        jq -r ".packages | to_entries[] | select((.key | ascii_downcase | contains(\"$query\")) or (.value.aliases? // [] | map(. | contains(\"$query\")) | any)) | [(.value.description | split(\" - \")[0]), .key, .value.version // \"latest\", .value.source // \"aurora\"] | @tsv" "$CLI_PACKAGES_FILE" 2>/dev/null | \
+        while IFS=$'\t' read -r name id ver src; do
+            printf "%-25s %-25s %-10s %s\n" "$name" "$id" "$ver" "$src"
+        done
         ;;
     *)
         echo "Aurora-Shell CLI Installer"
@@ -520,8 +442,13 @@ CLIEOF
             esac
             ;;
         search)
-            echo "📋 Aurora packages:"
-            jq -r '.packages | to_entries[] | "  \(.key) - \(.value.description)"' "$PACKAGES_FILE" 2>/dev/null
+            echo ""
+            printf "%-25s %-25s %-10s %s\n" "Name" "ID" "Version" "Source"
+            printf "%-25s %-25s %-10s %s\n" "-------------------------" "-------------------------" "----------" "------"
+            jq -r ".packages | to_entries[] | [(.value.description | split(\" - \")[0]), .key, .value.version // \"latest\", .value.source // \"aurora\"] | @tsv" "$PACKAGES_FILE" 2>/dev/null | \
+            while IFS=$'\t' read -r name id ver src; do
+                printf "%-25s %-25s %-10s %s\n" "$name" "$id" "$ver" "$src"
+            done
             if [ -n "$2" ]; then
                 echo ""
                 echo "🍺 Homebrew results:"
@@ -652,7 +579,7 @@ echo "🌀 Checking Aurora-shell..."
 cd "$HOME"
 # Search the entire home folder for a REAL Aurora-shell Git repo
 FOUND_REPO=$(cd ~
-find "$HOME" -maxdepth 10 -type d -name "aurora-shell" 2>/dev/null | while read -r dir; do
+find "$HOME" -maxdepth 10 -type d \( -iname "aurora-shell" -o -iname "Aurora-Shell" \) 2>/dev/null | while read -r dir; do
     if [ -d "$dir/.git" ]; then
         ORIGIN=$(git -C "$dir" remote get-url origin 2>/dev/null)
         if [ "$ORIGIN" = "$GIT_CLONE" ]; then
