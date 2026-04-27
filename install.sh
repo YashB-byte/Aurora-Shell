@@ -578,8 +578,7 @@ echo "🌀 Checking Aurora-shell..."
 
 cd "$HOME"
 # Search the entire home folder for a REAL Aurora-shell Git repo
-FOUND_REPO=$(cd ~
-find "$HOME" -maxdepth 10 -type d \( -iname "aurora-shell" -o -iname "Aurora-Shell" \) 2>/dev/null | while read -r dir; do
+FOUND_REPO=$(find "$HOME" -maxdepth 10 -type d 2>/dev/null | grep -i "aurora-shell$" | while read -r dir; do
     if [ -d "$dir/.git" ]; then
         ORIGIN=$(git -C "$dir" remote get-url origin 2>/dev/null)
         if [ "$ORIGIN" = "$GIT_CLONE" ]; then
@@ -599,6 +598,6 @@ else
     git clone "$GIT_CLONE" aurora-shell || true
 fi
 
-echo -e "\n\033[1;32m✅ v5.4.0 Deployed. 🛠️Xcode installed.\033[0m"
+echo -e "\n\033[1;32m✅ v$VER Deployed.\033[0m"
 
 echo "welcome to Aurora-Shell" | safe_lolcat
