@@ -9,7 +9,7 @@ Session Tracking: Displays a "Start Time" so you know exactly when you began you
 
 Cross-Platform: Tailored experiences for both Mac and Windows environments.
 
-🚀 Installation
+🚀 Installation:
 
 🍎 For macOS (Zsh)
 
