@@ -1,5 +1,5 @@
 #!/bin/bash
-SHELL_VER="--- Aurora-Shell v5.5.8 installer---"
+SHELL_VER="--- Aurora-Shell v5.5.9 installer---"
 # FIX: Sentinel Auth Visuals + Separator + CPU/Disk Telemetry
 
 # --- PATH CONFIGURATION ---
@@ -9,7 +9,7 @@ THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
 REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
 GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
-VER="5.5.8"
+VER="5.5.9"
 
 echo -e "removing old version" | lolcat
 rm -rf "$OLD_SHELL"
@@ -83,6 +83,10 @@ run_wizard() {
     [ -f "$CONFIG_FILE" ] && source "$CONFIG_FILE"
     
     read -s -p "🔐 Set Terminal PIN (Enter for none): " NEW_PW < /dev/tty; echo ""
+    if [ -n "$NEW_PW" ]; then
+        security add-generic-password -a "$USER" -s "aurora-shell-pin" -w "$NEW_PW" -U 2>/dev/null
+        echo "🔒 PIN stored securely in Keychain"
+    fi
     echo "🎨 1) Mega-Block 2) Custom Slant"
     read -p "Selection: " choice < /dev/tty
     if [ "$choice" == "2" ]; then 
@@ -98,7 +102,6 @@ run_wizard() {
 
     cat << EOF > "$CONFIG_FILE"
 AURORA_VER="$VER"
-AURORA_PW="${NEW_PW:-$AURORA_PW}"
 AURORA_HDR_MODE="$HDR_MODE"
 AURORA_HDR_VAL="$HDR_VAL"
 AURORA_USER_BDAY="${BDAY:-$AURORA_USER_BDAY}"
@@ -158,7 +161,7 @@ install_xcode_if_needed() {
 install_xcode_if_needed
 
 authenticate_user() {
-    local target_pw="${1:-$AURORA_PW}"
+    local target_pw="${1:-$(security find-generic-password -a "$USER" -s "aurora-shell-pin" -w 2>/dev/null)}"
     [[ -z "$target_pw" ]] && return
     clear
     echo "           .---.
