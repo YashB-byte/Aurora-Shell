@@ -56,7 +56,7 @@ async function getToken() {
             console.log(chalk.gray('Waiting for authentication...\n'));
             // Auto-open browser
             const { execSync } = require('child_process');
-            try { execSync(`open "${response.verificationUri}"`); } catch(e) {}
+            try { execSync(`open "https://microsoft.com/devicelogin"`); } catch(e) {}
         }
     });
     return result.accessToken;
