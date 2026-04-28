@@ -7,6 +7,28 @@ const { listTeams, listChannels, sendChannel, readChannel, createTeam } = requir
 const { listMeetings, createMeeting, setStatus, getStatus } = require('./meetings');
 const { openChat } = require('./tui');
 
+const b = (s) => chalk.hex('#6264a7')(s);
+const lb = (s) => chalk.hex('#9ea2e8')(s);
+
+const LOGO = `
+  ${lb('⠀⠀⠀⠀⢀⣴⣾⣿⣿⣷⣦⡀⠀⠀⠀⠀')}
+  ${lb('⠀⠀⠀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣦⠀⠀⠀')}
+  ${lb('⠀⠀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⠀⠀')}
+  ${lb('⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠀⠀')}  ${b('⠀⢀⣴⣾⣷⣦⡀')}
+  ${b('⠀⣀⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣀⠀')}  ${b('⠀⣾⣿⣿⣿⣿⣿⣷')}
+  ${b('⣾⣿⣿⣿')}${chalk.white('⣿⣿⣿⣿⣿⣿⣿⣿')}${b('⣿⣿⣷')} ${b('⣿⣿⣿⣿⣿⣿⣿⣿')}
+  ${b('⣿⣿⣿⣿')}${chalk.white('⣿⣿')}${chalk.bold.white(' T ')}${chalk.white('⣿⣿⣿⣿⣿')}${b('⣿⣿⣿')} ${b('⣿⣿⣿⣿⣿⣿⣿⣿')}
+  ${b('⣿⣿⣿⣿')}${chalk.white('⣿⣿⣿⣿⣿⣿⣿⣿')}${b('⣿⣿⣷')} ${b('⣿⣿⣿⣿⣿⣿⣿⣿')}
+  ${b('⠸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠇')}  ${b('⠸⣿⣿⣿⣿⣿⣿⠇')}
+  ${b('⠀⠙⠻⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⠋⠀')}  ${b('⠀⠙⠻⣿⣿⠟⠋')}
+
+  ${chalk.bold.hex('#6264a7')('Microsoft Teams CLI')} ${chalk.gray('v1.0.0 — Aurora Shell')}
+`;
+
+if (process.stdout.isTTY && !process.argv.includes('--no-logo')) {
+    console.log(LOGO);
+}
+
 const handle = (fn) => (...args) => fn(...args).catch(e => console.error(chalk.red('❌ ' + e.message)));
 
 program
