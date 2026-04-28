@@ -54,6 +54,9 @@ async function getToken() {
             console.log(chalk.white(`Go to: ${chalk.bold(response.verificationUri)}`));
             console.log(chalk.white(`Enter code: ${chalk.bold.yellow(response.userCode)}`));
             console.log(chalk.gray('Waiting for authentication...\n'));
+            // Auto-open browser
+            const { execSync } = require('child_process');
+            try { execSync(`open "${response.verificationUri}"`); } catch(e) {}
         }
     });
     return result.accessToken;
