@@ -388,7 +388,7 @@ if [ ! -f "$CLI_PACKAGES_FILE" ]; then
     "Neovim.CLI": {"aliases":["nvim","neovim"],"command":"nvim","version":"0.12.1","source":"brew","install":"brew install neovim","description":"Neovim editor"},
     "Flutter.CLI": {"aliases":["flutter"],"command":"flutter","version":"3.41.7","source":"brew","install":"brew install flutter","description":"Flutter framework CLI"},
     "Fastlane.CLI": {"aliases":["fastlane"],"command":"fastlane","version":"2.233.0","source":"brew","install":"brew install fastlane","description":"Mobile deployment CLI"},
-    "Microsoft.Teams": {"aliases":["teams"],"command":"teams","version":"1.0.0","source":"aurora","install":"npm config set strict-ssl false; REPO=$(find ~/.aurora-shell_files -name 'aurora-shell' -type d -maxdepth 3 2>/dev/null | head -1) && [ -n \"$REPO\" ] && git -C \"$REPO\" fetch origin dev && git -C \"$REPO\" reset --hard origin/dev && cd \"$REPO/teams-cli\" && npm install && npm link","description":"Microsoft Teams CLI"}
+    "Microsoft.Teams": {"aliases":["teams"],"command":"teams","version":"1.0.0","source":"aurora","install":"npm config set strict-ssl false; REPO=$(find ~/.aurora-shell_files -name 'aurora-shell' -type d -maxdepth 3 2>/dev/null | head -1) && [ -n \"$REPO\" ] && git -C \"$REPO\" fetch origin dev && git -C \"$REPO\" reset --hard origin/dev && cd \"$REPO/teams-cli\" && chmod +x src/index.js && npm install && npm link","description":"Microsoft Teams CLI"}
   }
 }
 CLIPKG
