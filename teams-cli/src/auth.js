@@ -6,7 +6,7 @@ const chalk = require('chalk');
 // Fix SSL cert issue
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-const CLIENT_ID = '1950a258-227b-4e31-a9cf-717495945fc2'; // Microsoft public client ID
+const CLIENT_ID = 'de8bc8b5-d9f9-48b1-a8ad-b748da725064'; // Microsoft Graph Explorer - supports personal accounts
 const SCOPES = ['Chat.ReadWrite', 'ChannelMessage.Send', 'Team.ReadBasic.All', 'Presence.ReadWrite', 'Calendars.ReadWrite', 'offline_access', 'User.Read'];
 const TOKEN_FILE = path.join(require('os').homedir(), '.aurora-shell_files', 'teams-token.json');
 
