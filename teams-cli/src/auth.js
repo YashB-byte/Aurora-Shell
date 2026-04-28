@@ -6,8 +6,8 @@ const chalk = require('chalk');
 // Fix SSL cert issue
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-const CLIENT_ID = '5e3ce6c0-2b1f-4285-8d4b-75ee78787346'; // Microsoft Teams Web Client
-const SCOPES = ['Chat.ReadWrite', 'ChannelMessage.Send', 'Team.ReadBasic.All', 'Presence.ReadWrite', 'Calendars.ReadWrite', 'offline_access', 'User.Read'];
+const CLIENT_ID = '1fec8e78-bce4-4aaf-ab1b-5451cc387264'; // Microsoft Teams mobile/desktop
+const SCOPES = ['https://graph.microsoft.com/Chat.ReadWrite', 'https://graph.microsoft.com/ChannelMessage.Send', 'https://graph.microsoft.com/Team.ReadBasic.All', 'https://graph.microsoft.com/Presence.ReadWrite', 'https://graph.microsoft.com/Calendars.ReadWrite', 'offline_access', 'https://graph.microsoft.com/User.Read'];
 const TOKEN_FILE = path.join(require('os').homedir(), '.aurora-shell_files', 'teams-token.json');
 
 const msalConfig = {
