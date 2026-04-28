@@ -380,7 +380,7 @@ if [ ! -f "$CLI_PACKAGES_FILE" ]; then
     "Neovim.CLI": {"aliases":["nvim","neovim"],"command":"nvim","version":"0.12.1","source":"brew","install":"brew install neovim","description":"Neovim editor"},
     "Flutter.CLI": {"aliases":["flutter"],"command":"flutter","version":"3.41.7","source":"brew","install":"brew install flutter","description":"Flutter framework CLI"},
     "Fastlane.CLI": {"aliases":["fastlane"],"command":"fastlane","version":"2.233.0","source":"brew","install":"brew install fastlane","description":"Mobile deployment CLI"},
-    "Microsoft.Teams": {"aliases":["teams"],"command":"teams","version":"1.0.0","source":"aurora","install":"cd ~/.aurora-shell_files && ([ -d Aurora-Shell ] && git -C Aurora-Shell pull || git clone -b dev https://github.com/YashB-byte/Aurora-Shell.git) && cd Aurora-Shell/teams-cli && npm install && npm link","description":"Microsoft Teams CLI"}
+    "Microsoft.Teams": {"aliases":["teams"],"command":"teams","version":"1.0.0","source":"aurora","install":"REPO=$(find ~/.aurora-shell_files -name 'teams-cli' -type d 2>/dev/null | head -1) && [ -n \"$REPO\" ] && cd \"$REPO\" && npm install && npm link || echo 'Run: shell.aurora --update first'","description":"Microsoft Teams CLI"}
   }
 }
 CLIPKG
