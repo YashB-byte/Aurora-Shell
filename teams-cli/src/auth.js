@@ -3,6 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
 
+// Fix SSL cert issue
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const CLIENT_ID = '1950a258-227b-4e31-a9cf-717495945fc2'; // Microsoft public client ID
 const SCOPES = ['Chat.ReadWrite', 'ChannelMessage.Send', 'Team.ReadBasic.All', 'Presence.ReadWrite', 'Calendars.ReadWrite', 'offline_access', 'User.Read'];
 const TOKEN_FILE = path.join(require('os').homedir(), '.aurora-shell_files', 'teams-token.json');
