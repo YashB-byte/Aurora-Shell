@@ -9,11 +9,18 @@ Session Tracking: Displays a "Start Time" so you know exactly when you began you
 
 Cross-Platform: Tailored experiences for both Mac and Windows environments.
 
-🚀 Installation
+🚀 Installation:
 
 🍎 For macOS (Zsh)
 
-**Option 1: Download Installer (.dmg)**
+**Option 1: Download macOS App (.dmg)**
+1. Download the latest Aurora-Shell.dmg
+2. Mount the DMG and install:
+   ```bash
+   cp -R '/Volumes/Aurora-Shell for Mac/Aurora-Shell.app' ~/Applications && xattr -d com.apple.quarantine ~/Applications/Aurora-Shell.app && open ~/Applications/Aurora-Shell.app
+   ```
+
+**Option 2: Download Theme Installer (.dmg)**
 1. Download the latest [AuroraShell.dmg](https://github.com/YashB-byte/aurora-shell-2/releases/latest)
 2. Open the .dmg file
 3. Open Terminal and run:
@@ -25,13 +32,8 @@ Cross-Platform: Tailored experiences for both Mac and Windows environments.
 
 **Option 2: Command Line Install**
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/install.sh)
+bash <(curl -s https://raw.githubusercontent.com/YashB-Byte/Aurora-Shell/main/install.sh)
 ```
-or for dev branch:
-```bash
-bash <(curl -s https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/dev/install.sh)
-```
-run with "```-v```" at the end of command to see everything that is going on
 
 🪟 For Windows (PowerShell 7+)
 
@@ -50,7 +52,7 @@ winget install Microsoft.PowerShell.Preview
 
 **Option 1: command line install**
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/YashB-byte/aurora-shell-2/main/install.ps1'))
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/YashB-Byte/Aurora-Shell/main/install.ps1'))
 ```
 
 **Option 2: download installer (.exe)**

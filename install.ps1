@@ -1,54 +1,161 @@
-# --- AURORA-SHELL WINDOWS MASTER v5.3 (Hard-Coded Header) ---
-$INSTALL_PATH = "$HOME\.aurora-shell"
-$CONFIG_FILE = "$HOME\.aurorasettings"
-if (!(Test-Path $INSTALL_PATH)) { New-Item -ItemType Directory -Path $INSTALL_PATH }
+# --- AURORA-SHELL WINDOWS INSTALLER v5.5.7 ---
+$SHELL_VER = "--- Aurora-Shell v5.5.7 installer---"
+$VER = "5.5.7"
 
-Write-Host "🌟 Aurora-Shell Universal Installer (Windows) v5.3" -ForegroundColor Cyan
+$INSTALL_PATH = "$HOME\.aurora-shell_files"
+$CONFIG_FILE = "$INSTALL_PATH\aurora-shell_settings.ps1"
+$THEME_FILE = "$INSTALL_PATH\aurora-shell_theme.ps1"
+$PACKAGES_FILE = "$INSTALL_PATH\packages.json"
+$CLI_PACKAGES_FILE = "$INSTALL_PATH\cli-packages.json"
+$BIN_DIR = "$INSTALL_PATH\bin"
 
-# 1. FIXED HEADER CONFIGURATION
-# No more selection menu; Block Art is now the standard.
-$HEADER_TYPE = "BLOCK"
-$HEADER_TEXT = "Aurora-Shell"
+Write-Host $SHELL_VER -ForegroundColor Cyan
 
-# 2. PROMPT CONFIGURATION
-Write-Host "`n--- STEP 1: PROMPT STYLE ---" -ForegroundColor Green
-Write-Host "1) Default    (Aurora-Shell ✨ Time >)"
-Write-Host "2) Minimalist (Time >)"
-$p_choice = Read-Host "Selection [1-2]"
+# Create directories
+if (!(Test-Path $INSTALL_PATH)) { New-Item -ItemType Directory -Path $INSTALL_PATH -Force | Out-Null }
+if (!(Test-Path $BIN_DIR)) { New-Item -ItemType Directory -Path $BIN_DIR -Force | Out-Null }
 
-switch ($p_choice) {
-    "1" { $FINAL_ID = "Aurora-Shell" }
-    "2" { $FINAL_ID = "" }
-    default { $FINAL_ID = "Aurora-Shell" }
+# Add bin to PATH if not already there
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if ($currentPath -notlike "*$BIN_DIR*") {
+    [Environment]::SetEnvironmentVariable("Path", "$currentPath;$BIN_DIR", "User")
+    $env:Path = "$env:Path;$BIN_DIR"
 }
 
-# 3. SECURITY
-$NEW_PASS = Read-Host "🔐 Set Master Password (Leave blank for none)" -AsSecureString
+# --- CONFIG WIZARD ---
+Write-Host "`n--- AURORA CONFIGURATION WIZARD ---" -ForegroundColor Green
+
+$NEW_PASS = Read-Host "🔐 Set Terminal PIN (Enter for none)" -AsSecureString
 $PLAIN_PASS = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($NEW_PASS))
 
-# 4. CREATE PERSISTENT CONFIG
+Write-Host "🎨 1) Mega-Block 2) Custom Text"
+$choice = Read-Host "Selection"
+if ($choice -eq "2") {
+    $HDR_MODE = "CUSTOM"
+    $HDR_VAL = Read-Host "✍️ Header Name"
+} else {
+    $HDR_MODE = "BLOCK"
+    $HDR_VAL = "Aurora-Shell"
+}
+
+$BDAY = Read-Host "🎂 Birthday (MMDD)"
+$P_ID = Read-Host "🆔 Prompt ID"
+
+# Save config
 $ConfigContent = @"
-AURORA_HEADER_TYPE="$HEADER_TYPE"
-AURORA_HEADER_TEXT="$HEADER_TEXT"
-AURORA_HEADER_VISIBLE="ON"
-AURORA_STATS="ON"
-AURORA_TIME_VISIBLE="ON"
-AURORA_PASS_ENABLED="ON"
-AURORA_PWD="$PLAIN_PASS"
-AURORA_ID="$FINAL_ID"
-AURORA_MOTD="Welcome to the void."
+`$AURORA_VER = "$VER"
+`$AURORA_PW = "$PLAIN_PASS"
+`$AURORA_HDR_MODE = "$HDR_MODE"
+`$AURORA_HDR_VAL = "$HDR_VAL"
+`$AURORA_USER_BDAY = "$BDAY"
+`$AURORA_ID = "$P_ID"
 "@
 $ConfigContent | Out-File -FilePath $CONFIG_FILE -Encoding utf8
 
-# 5. GENERATE THEME ENGINE (PowerShell Profile)
-$THEME_FILE = "$INSTALL_PATH\aurora_theme.ps1"
+# --- INITIALIZE PACKAGES ---
+if (!(Test-Path $PACKAGES_FILE)) {
+    $packagesJson = @'
+{
+  "packages": {
+    "aurora-app": {
+      "url": "https://github.com/YashB-byte/Aurora-Shell/releases/latest/download/Aurora-Shell.dmg",
+      "type": "dmg",
+      "description": "Aurora Shell Terminal App"
+    },
+    "CLI": {
+      "url": "install-cli",
+      "type": "cli-installer",
+      "description": "Aurora-Shell CLI - Install CLI versions of apps"
+    }
+  }
+}
+'@
+    $packagesJson | Out-File -FilePath $PACKAGES_FILE -Encoding utf8
+}
 
-$ThemeScript = @'
-function Show-AuroraDisplay {
-    $window_width = $Host.UI.RawUI.WindowSize.Width
+# --- INITIALIZE CLI PACKAGES ---
+if (!(Test-Path $CLI_PACKAGES_FILE)) {
+    # Note: Windows uses winget/choco instead of brew
+    $cliPackagesJson = Get-Content "$PSScriptRoot/../Aurora-Shell/install.sh" -Raw | 
+        Select-String -Pattern 'cat > "\$CLI_PACKAGES_FILE" << ''CLIPKG''(.*?)CLIPKG' -AllMatches |
+        ForEach-Object { $_.Matches[0].Groups[1].Value }
     
-    # The Hard-Coded Master Header
-    $header = @"
+    # For now, create a minimal set - full list will be added when we port brew commands to winget
+    $cliPackagesJson = @'
+{
+  "packages": {
+    "GitHub": {"command": "gh", "install": "winget install GitHub.cli", "description": "GitHub CLI"},
+    "AWS": {"command": "aws", "install": "winget install Amazon.AWSCLI", "description": "Amazon Web Services CLI"},
+    "Azure": {"command": "az", "install": "winget install Microsoft.AzureCLI", "description": "Microsoft Azure CLI"},
+    "Docker": {"command": "docker", "install": "winget install Docker.DockerDesktop", "description": "Docker container CLI"},
+    "Node": {"command": "node", "install": "winget install OpenJS.NodeJS", "description": "Node.js runtime"},
+    "Python": {"command": "python", "install": "winget install Python.Python.3", "description": "Python runtime"},
+    "Git": {"command": "git", "install": "winget install Git.Git", "description": "Git version control"},
+    "VSCode": {"command": "code", "install": "winget install Microsoft.VisualStudioCode", "description": "Visual Studio Code"},
+    "Microsoft.Teams": {"command": "teams-cli", "install": "Write-Host 'Teams CLI not yet available - coming soon'", "description": "Microsoft Teams CLI (coming soon)"}
+  }
+}
+'@
+    $cliPackagesJson | Out-File -FilePath $CLI_PACKAGES_FILE -Encoding utf8
+}
+
+# --- GENERATE THEME ENGINE ---
+$ThemeScript = @'
+# Generated by Aurora-Shell Installer
+. "$HOME\.aurora-shell_files\aurora-shell_settings.ps1"
+
+function ConvertTo-ASCIIArt {
+    param([string]$Text)
+    
+    # Simple ASCII art font (similar to figlet slant)
+    $font = @{
+        'A' = @('  ___   ', ' / _ \  ', '/ /_\ \ ', '|  _  | ', '| | | | ', '\_| |_/ ')
+        'B' = @(' ____  ', '| __ ) ', '|  _ \ ', '| |_) |', '|____/ ', '       ')
+        'C' = @('  ____ ', ' / ___|', '| |    ', '| |___ ', ' \____|', '       ')
+        'D' = @(' ____  ', '|  _ \ ', '| | | |', '| |_| |', '|____/ ', '       ')
+        'E' = @(' _____ ', '| ____|', '|  _|  ', '| |___ ', '|_____|', '       ')
+        'F' = @(' _____ ', '| ____|', '|  _|  ', '| |    ', '|_|    ', '       ')
+        'G' = @('  ____ ', ' / ___|', '| |  _ ', '| |_| |', ' \____|', '       ')
+        'H' = @(' _   _ ', '| | | |', '| |_| |', '|  _  |', '| | | |', '|_| |_|')
+        'I' = @(' ___ ', '|_ _|', ' | | ', ' | | ', '|___|', '     ')
+        'J' = @('     _ ', '    | |', ' _  | |', '| |_| |', ' \___/ ', '       ')
+        'K' = @(' _  __', '| |/ /', '| '' / ', '| . \ ', '|_|\_\', '      ')
+        'L' = @(' _     ', '| |    ', '| |    ', '| |___ ', '|_____|', '       ')
+        'M' = @(' __  __ ', '|  \/  |', '| |\/| |', '| |  | |', '|_|  |_|', '        ')
+        'N' = @(' _   _ ', '| \ | |', '|  \| |', '| |\  |', '|_| \_|', '       ')
+        'O' = @('  ___  ', ' / _ \ ', '| | | |', '| |_| |', ' \___/ ', '       ')
+        'P' = @(' ____  ', '|  _ \ ', '| |_) |', '|  __/ ', '|_|    ', '       ')
+        'Q' = @('  ___  ', ' / _ \ ', '| | | |', '| |_| |', ' \__\_\', '       ')
+        'R' = @(' ____  ', '|  _ \ ', '| |_) |', '|  _ < ', '|_| \_\', '       ')
+        'S' = @(' ____  ', '/ ___| ', '\___ \ ', ' ___) |', '|____/ ', '       ')
+        'T' = @(' _____ ', '|_   _|', '  | |  ', '  | |  ', '  |_|  ', '       ')
+        'U' = @(' _   _ ', '| | | |', '| | | |', '| |_| |', ' \___/ ', '       ')
+        'V' = @(' _   _ ', '| | | |', '| | | |', '| |_| |', ' \___/ ', '       ')
+        'W' = @(' _    _ ', '| |  | |', '| |  | |', '| |/\| |', '|__/\__|', '        ')
+        'X' = @(' __  __', ' \ \/ /', '  \  / ', '  /  \ ', ' /_/\_\', '       ')
+        'Y' = @(' _   _ ', '| | | |', '| |_| |', ' \__, |', '   /_/ ', '       ')
+        'Z' = @(' _____ ', '|__  / ', '  / /  ', ' / /_  ', '/____|', '       ')
+        '-' = @('       ', '       ', ' _____ ', '|_____|', '       ', '       ')
+        ' ' = @('   ', '   ', '   ', '   ', '   ', '   ')
+    }
+    
+    $lines = @('', '', '', '', '', '')
+    foreach ($char in $Text.ToUpper().ToCharArray()) {
+        if ($font.ContainsKey([string]$char)) {
+            for ($i = 0; $i -lt 6; $i++) {
+                $lines[$i] += $font[[string]$char][$i]
+            }
+        }
+    }
+    
+    return $lines -join "`n"
+}
+
+function Show-Aurora {
+    $cols = $Host.UI.RawUI.WindowSize.Width
+    
+    if ($AURORA_HDR_MODE -eq "BLOCK") {
+        $content = @"
  █████╗ ██╗   ██╗██████╗  ██████╗ ██████╗  █████╗  
 ██╔══██╗██║   ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗ 
 ███████║██║   ██║██████╔╝██║   ██║██████╔╝███████║ 
@@ -63,34 +170,227 @@ function Show-AuroraDisplay {
       ███████║██║  ██║███████╗███████╗███████╗     
       ╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝
 "@
-    Write-Host $header -ForegroundColor Cyan
+    } else {
+        $content = ConvertTo-ASCIIArt -Text $AURORA_HDR_VAL
+    }
     
-    # Stats Line
+    Write-Host $content -ForegroundColor Cyan
+    
+    # Stats
+    $cpu = (Get-Counter '\Processor(_Total)\% Processor Time').CounterSamples.CookedValue
+    $disk = (Get-PSDrive C).Free / 1GB
     $date = Get-Date -Format "MM/dd/yy"
-    $stats = "📅 $date | 🧠 Aurora Active"
-    Write-Host $stats.PadLeft([int]($window_width/2 + $stats.Length/2)) -ForegroundColor DarkCyan
+    $stats = "⚡ AURORA v$AURORA_VER | 🧠 CPU: $([math]::Round($cpu, 2))% | 💾 FREE: $([math]::Round($disk, 2))GB | 📅 $date"
+    Write-Host $stats -ForegroundColor DarkCyan
+    Write-Host ("-" * $cols) -ForegroundColor Cyan
 }
 
 function aurora {
-    param([string]$action)
+    param([string]$action, [string]$branch = "main")
     switch ($action) {
-        "--status" { Get-Content "$HOME\.aurorasettings" }
-        "--uninstall" { 
-            Remove-Item "$HOME\.aurora-shell" -Recurse -ErrorAction SilentlyContinue
-            Remove-Item "$HOME\.aurorasettings" -ErrorAction SilentlyContinue
-            Write-Host "🗑️ Removed." -ForegroundColor Red
+        "--display" { Show-Aurora }
+        "--sys" { Get-ComputerInfo | Select-Object CsName, WindowsVersion, OsArchitecture }
+        "--update" { 
+            Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/YashB-byte/aurora-shell/$branch/install.ps1" -UseBasicParsing).Content
         }
-        default { Show-AuroraDisplay }
+        "--config" { notepad $HOME\.aurora-shell\aurora-shell_settings.ps1 }
+        "--uninstall" { 
+            Remove-Item "$HOME\.aurora-shell" -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "🗑️ Uninstalled" -ForegroundColor Red
+        }
+        default { Write-Host "Flags: --display, --sys, --update [branch], --config, --uninstall" }
+    }
+}
+
+# --- SHELL PACKAGE MANAGER ---
+function shell {
+    param([string]$cmd, [string]$pkg, [string]$url, [string]$type = "binary", [string]$desc = "Custom")
+    
+    $packagesFile = "$HOME\.aurora-shell\packages.json"
+    $binDir = "$HOME\.aurora-shell\bin"
+    
+    switch ($cmd) {
+        "install" {
+            $packages = Get-Content $packagesFile | ConvertFrom-Json
+            $package = $packages.packages.$pkg
+            
+            if (!$package) {
+                Write-Host "🔍 Not in Aurora registry. Searching winget..." -ForegroundColor Yellow
+                $wingetResult = winget search $pkg 2>$null
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "📦 Found in winget: $pkg" -ForegroundColor Green
+                    $confirm = Read-Host "Install via winget? (y/n)"
+                    if ($confirm -eq "y") {
+                        winget install $pkg
+                        Write-Host "✅ Installed via winget" -ForegroundColor Green
+                    }
+                } else {
+                    Write-Host "❌ Package not found in Aurora or winget" -ForegroundColor Red
+                }
+                return
+            }
+            
+            Write-Host "📦 Installing $pkg..." -ForegroundColor Yellow
+            
+            switch ($package.type) {
+                "binary" {
+                    $dest = "$binDir\$pkg.exe"
+                    Invoke-WebRequest -Uri $package.url -OutFile $dest
+                    Write-Host "✅ Installed to $dest" -ForegroundColor Green
+                }
+                "cli-installer" {
+                    # Install CLI command
+                    $cliScript = @'
+$CLI_PACKAGES_FILE = "$HOME\.aurora-shell_files\cli-packages.json"
+
+if (!(Test-Path $CLI_PACKAGES_FILE)) {
+    Write-Host "❌ CLI packages file not found" -ForegroundColor Red
+    return
+}
+
+param([string]$action, [string]$package)
+
+$packages = Get-Content $CLI_PACKAGES_FILE | ConvertFrom-Json
+
+switch ($action) {
+    "install" {
+        $pkg = $packages.packages.$package
+        if (!$pkg) {
+            Write-Host "❌ CLI package '$package' not found" -ForegroundColor Red
+            Write-Host "Available: $($packages.packages.PSObject.Properties.Name -join ', ')"
+            return
+        }
+        Write-Host "📦 Installing $package CLI..." -ForegroundColor Yellow
+        Invoke-Expression $pkg.install
+        if (Get-Command $pkg.command -ErrorAction SilentlyContinue) {
+            Write-Host "✅ $package CLI installed: $($pkg.command)" -ForegroundColor Green
+        }
+    }
+    "list" {
+        Write-Host "📋 Available CLI packages:" -ForegroundColor Cyan
+        $packages.packages.PSObject.Properties | ForEach-Object {
+            Write-Host "  $($_.Name) ($($_.Value.command)) - $($_.Value.description)"
+        }
+    }
+    "search" {
+        $query = $package.ToLower()
+        Write-Host "🔍 Searching CLI packages for: $package" -ForegroundColor Cyan
+        $packages.packages.PSObject.Properties | Where-Object { $_.Name.ToLower() -like "*$query*" } | ForEach-Object {
+            Write-Host "  $($_.Name) ($($_.Value.command)) - $($_.Value.description)"
+        }
+    }
+    default {
+        Write-Host "Aurora-Shell CLI Installer"
+        Write-Host ""
+        Write-Host "Usage:"
+        Write-Host "  CLI install <package>  - Install CLI version of an app"
+        Write-Host "  CLI list               - List available CLI packages"
+        Write-Host "  CLI search <query>     - Search CLI packages"
+        Write-Host ""
+        Write-Host "Examples:"
+        Write-Host "  CLI install GitHub"
+        Write-Host "  CLI install Microsoft.Teams"
     }
 }
 '@
-$ThemeScript | Out-File -FilePath $THEME_FILE -Encoding utf8
-
-# 6. SYNC TO PROFILE
-if (!(Test-Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force }
-$ProfileContent = Get-Content $PROFILE
-if ($ProfileContent -notlike "*$THEME_FILE*") {
-    Add-Content -Path $PROFILE -Value "`n. `"$THEME_FILE`""
+                    $cliScript | Out-File -FilePath "$binDir\CLI.ps1" -Encoding utf8
+                    Write-Host "✅ CLI command installed" -ForegroundColor Green
+                    Write-Host "Usage: CLI install GitHub"
+                }
+                default {
+                    Write-Host "⚠️ Package type '$($package.type)' not supported on Windows" -ForegroundColor Yellow
+                }
+            }
+        }
+        "search" {
+            $packages = Get-Content $packagesFile | ConvertFrom-Json
+            Write-Host "📋 Aurora packages:" -ForegroundColor Cyan
+            $packages.packages.PSObject.Properties | ForEach-Object {
+                Write-Host "  $($_.Name) - $($_.Value.description)"
+            }
+            if ($pkg) {
+                Write-Host "`n🪟 Winget results:" -ForegroundColor Cyan
+                winget search $pkg 2>$null | Select-Object -First 10
+            }
+        }
+        "list" {
+            Write-Host "📦 Installed:" -ForegroundColor Cyan
+            Get-ChildItem $binDir -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $($_.BaseName)" }
+        }
+        "add" {
+            Write-Host "📝 Package submission:" -ForegroundColor Yellow
+            Write-Host "  Name: $pkg"
+            Write-Host "  URL: $url"
+            Write-Host "  Type: $type"
+            Write-Host "  Description: $desc"
+            $confirm = Read-Host "Submit for approval? (y/n)"
+            if ($confirm -eq "y") {
+                $packages = Get-Content $packagesFile | ConvertFrom-Json
+                $packages.packages | Add-Member -MemberType NoteProperty -Name $pkg -Value @{
+                    url = $url
+                    type = $type
+                    description = $desc
+                } -Force
+                $packages | ConvertTo-Json -Depth 10 | Out-File -FilePath $packagesFile -Encoding utf8
+                Write-Host "✅ Added $pkg locally" -ForegroundColor Green
+                $issueUrl = "https://github.com/YashB-byte/Aurora-Shell/issues/new?title=Package%20Request:%20$pkg&body=**Package%20Name:**%20$pkg%0A**URL:**%20$url%0A**Type:**%20$type%0A**Description:**%20$desc"
+                Start-Process $issueUrl
+            }
+        }
+        "remove" {
+            Write-Host "📝 Package removal request:" -ForegroundColor Yellow
+            Write-Host "  Name: $pkg"
+            $confirm = Read-Host "Submit removal request and remove locally? (y/n)"
+            if ($confirm -eq "y") {
+                $packages = Get-Content $packagesFile | ConvertFrom-Json
+                $packages.packages.PSObject.Properties.Remove($pkg)
+                $packages | ConvertTo-Json -Depth 10 | Out-File -FilePath $packagesFile -Encoding utf8
+                Write-Host "✅ Removed $pkg from local registry" -ForegroundColor Green
+                $issueUrl = "https://github.com/YashB-byte/Aurora-Shell/issues/new?title=Package%20Removal:%20$pkg"
+                Start-Process $issueUrl
+            }
+        }
+        "uninstall" {
+            Remove-Item "$binDir\$pkg*" -Force -ErrorAction SilentlyContinue
+            Write-Host "✅ Uninstalled $pkg" -ForegroundColor Green
+        }
+        default {
+            Write-Host "Usage: shell install|search|list|add|remove|uninstall"
+        }
+    }
 }
 
-Write-Host "`n✅ v5.3 Installed with Classic Header! Restart PowerShell." -ForegroundColor Green
+Show-Aurora
+'@
+$ThemeScript | Out-File -FilePath $THEME_FILE -Encoding utf8
+
+# --- SYNC TO PROFILE ---
+if (!(Test-Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force | Out-Null }
+$profileContent = Get-Content $PROFILE -Raw -ErrorAction SilentlyContinue
+$sourceBlock = "Get-ChildItem `"$INSTALL_PATH\*.ps1`" | ForEach-Object { . `$_.FullName }"
+if ($profileContent -notlike "*$INSTALL_PATH*") {
+    Add-Content -Path $PROFILE -Value "`n$sourceBlock"
+}
+
+# --- SYNC AURORA-SHELL REPO ---
+$GIT_CLONE = "https://github.com/YashB-byte/aurora-shell.git"
+Write-Host "`n🌀 Checking Aurora-shell..." -ForegroundColor Cyan
+
+$FOUND_REPO = Get-ChildItem -Path $HOME -Recurse -Depth 10 -Filter ".git" -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+    $dir = $_.Parent.FullName
+    $origin = git -C $dir remote get-url origin 2>$null
+    if ($origin -eq $GIT_CLONE) { $dir }
+} | Select-Object -First 1
+
+if ($FOUND_REPO) {
+    Write-Host "🔄 Found existing Aurora-shell repo at: $FOUND_REPO" -ForegroundColor Yellow
+    Set-Location $FOUND_REPO
+    git pull --rebase --autostash
+} else {
+    Write-Host "⬇ No matching repo found — cloning fresh copy..." -ForegroundColor Yellow
+    Set-Location $INSTALL_PATH
+    git clone $GIT_CLONE aurora-shell
+}
+
+Write-Host "`n✅ v5.5.7 Deployed. Restart PowerShell." -ForegroundColor Green
+Write-Host "Welcome to Aurora-Shell" -ForegroundColor Cyan
