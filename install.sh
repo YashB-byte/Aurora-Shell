@@ -62,6 +62,14 @@ dev_tools_bootstrap() {
         read ans
         if [ "$ans" = "y" ]; then
             case "$name" in
+                "Git")
+                    if command -v git >/dev/null 2>&1; then
+                        echo "✔ Git already installed: $(git --version)"
+                    else
+                        echo "⬇ Installing Git via Xcode Command Line Tools..."
+                        xcode-select --install 2>/dev/null || open "/System/Library/CoreServices/Install Command Line Developer Tools.app" 2>/dev/null || true
+                    fi
+                    ;;
                 "Docker")
                     if command -v sudo >/dev/null 2>&1; then
                         brew install --cask docker-desktop
