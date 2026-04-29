@@ -69,8 +69,9 @@ async function login() {
     try { execSync(`open "https://microsoft.com/devicelogin"`); } catch(e) {}
 
     // Step 2: Poll for token
-    const interval = (deviceData.interval || 5) * 1000;
-    while (true) {
+    const interval = Math.max((deviceData.interval || 5), 3) * 1000;
+    const expires = Date.now() + (deviceData.expires_in || 900) * 1000;
+    while (Date.now() < expires) {
         await new Promise(r => setTimeout(r, interval));
         const tokenData = await post(`https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token`, {
             client_id: CLIENT_ID,
@@ -86,6 +87,7 @@ async function login() {
         }
         // authorization_pending - keep polling
     }
+    throw new Error('Login timed out');
 }
 
 async function ensureToken() {
