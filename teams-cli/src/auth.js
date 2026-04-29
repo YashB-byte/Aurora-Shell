@@ -6,7 +6,7 @@ const { execSync } = require('child_process');
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-const CLIENT_ID = '1fec8e78-bce4-4aaf-ab1b-5451cc387264';
+const CLIENT_ID = '5a43bd46-d02c-4c3b-990b-4e515af86828'; // Aurora Teams CLI
 const TENANT = 'common';
 const SCOPES = 'https://graph.microsoft.com/Chat.ReadWrite https://graph.microsoft.com/Team.ReadBasic.All https://graph.microsoft.com/User.Read offline_access';
 const TOKEN_FILE = path.join(require('os').homedir(), '.aurora-shell_files', 'teams-token.json');
