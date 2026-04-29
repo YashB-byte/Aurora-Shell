@@ -7,8 +7,8 @@ OLD_SHELL="$HOME/.aurora-shell_files"
 DATA_DIR="$HOME/.aurora-shell_files"
 THEME_FILE="$DATA_DIR/aurora-shell_theme"
 CONFIG_FILE="$DATA_DIR/aurora-shell_settings"
-REPO_BASE="https://raw.githubusercontent.com/YashB-byte/aurora-shell"
-GIT_CLONE="https://github.com/YashB-byte/aurora-shell.git"
+REPO_BASE="https://raw.githubusercontent.com/Seaus-tech/Aurora-Shell"
+GIT_CLONE="https://github.com/Seaus-tech/Aurora-Shell.git"
 VER="5.5.9"
 
 echo -e "removing old version" | lolcat
@@ -262,7 +262,7 @@ shell.aurora() {
         --sys) sw_vers && sysctl -n machdep.cpu.brand_string ;;
         --update)
             local branch="${2:-main}"
-            bash <(curl -s "https://raw.githubusercontent.com/YashB-byte/aurora-shell/$branch/install.sh")
+            bash <(curl -s "https://raw.githubusercontent.com/Seaus-tech/Aurora-Shell/$branch/install.sh")
             ;;
         --config) open -a Xcode "$HOME/.aurora-shell_files/aurora-shell_settings" || ${EDITOR:-vi} "$HOME/.aurora-shell_files/aurora-shell_settings" ;;
         --lock) authenticate_user "MANUAL" && Show-Aurora ;;
@@ -284,7 +284,7 @@ if [ ! -f "$PACKAGES_FILE" ]; then
   "packages": {
     "Aurora.App": {
       "aliases": ["aurora-app"],
-      "url": "https://github.com/YashB-byte/Aurora-Shell/releases/latest/download/Aurora-Shell.dmg",
+      "url": "https://github.com/Seaus-tech/Aurora-Shell/releases/latest/download/Aurora-Shell.dmg",
       "type": "dmg",
       "description": "Aurora Shell Terminal App"
     },
@@ -510,7 +510,7 @@ CLIEOF
                 echo "✅ Added $2 locally"
                 echo ""
                 echo "🌐 Opening approval form in browser..."
-                local issue_url="https://github.com/YashB-byte/Aurora-Shell/issues/new?title=Package%20Request:%20$2&body=**Package%20Name:**%20$2%0A**URL:**%20$3%0A**Type:**%20${4:-binary}%0A**Description:**%20${5:-Custom}%0A%0A----%0ASubmitted%20via%20shell%20add%20command"
+                local issue_url="https://github.com/Seaus-tech/Aurora-Shell/issues/new?title=Package%20Request:%20$2&body=**Package%20Name:**%20$2%0A**URL:**%20$3%0A**Type:**%20${4:-binary}%0A**Description:**%20${5:-Custom}%0A%0A----%0ASubmitted%20via%20shell%20add%20command"
                 open "$issue_url" 2>/dev/null || xdg-open "$issue_url" 2>/dev/null || echo "Visit: $issue_url"
             fi
             ;;
@@ -533,7 +533,7 @@ CLIEOF
                 echo "✅ Removed $2 from local registry"
                 echo ""
                 echo "🌐 Opening removal request form..."
-                local issue_url="https://github.com/YashB-byte/Aurora-Shell/issues/new?title=Package%20Removal:%20$2&body=**Package%20Name:**%20$2%0A**Reason:**%20${3:-No%20reason%20provided}%0A%0A----%0ASubmitted%20via%20shell%20remove%20command"
+                local issue_url="https://github.com/Seaus-tech/Aurora-Shell/issues/new?title=Package%20Removal:%20$2&body=**Package%20Name:**%20$2%0A**Reason:**%20${3:-No%20reason%20provided}%0A%0A----%0ASubmitted%20via%20shell%20remove%20command"
                 open "$issue_url" 2>/dev/null || xdg-open "$issue_url" 2>/dev/null || echo "Visit: $issue_url"
             fi
             ;;
