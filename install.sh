@@ -16,6 +16,7 @@ rm -rf "$OLD_SHELL"
 
 echo -e "Making "$DATA_DIR" " | lolcat
 mkdir -p "$DATA_DIR"
+mkdir -p "$DATA_DIR/bin"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
 
 echo "$SHELL_VER" | lolcat
