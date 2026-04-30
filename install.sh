@@ -16,7 +16,6 @@ rm -rf "$OLD_SHELL"
 
 echo -e "Making "$DATA_DIR" " | lolcat
 mkdir -p "$DATA_DIR"
-mkdir -p "$DATA_DIR/bin"
 [ -f "$THEME_FILE" ] && rm "$THEME_FILE"
 
 echo "$SHELL_VER" | lolcat
@@ -586,6 +585,21 @@ rainbow_prompt() {
 
 authenticate_user
 Show-Aurora
+
+# --- VERSION CHECK ---
+{
+    REMOTE_VER=$(curl -sf "https://raw.githubusercontent.com/Seaus-tech/Aurora-Shell/dev/install.sh" 2>/dev/null | grep '^VER=' | head -1 | sed 's/VER="\(.*\)"/\1/')
+    if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$AURORA_VER" ]; then
+        echo ""
+        echo -n "🔔 Aurora-Shell wants to update (v$AURORA_VER → v$REMOTE_VER) [y/N]: "
+        read _upd < /dev/tty
+        if [ "$_upd" = "y" ] || [ "$_upd" = "Y" ]; then
+            shell.aurora --update dev
+        else
+            sleep 1
+        fi
+    fi
+} &
 EOF
 }
 
