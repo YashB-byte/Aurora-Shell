@@ -86,6 +86,9 @@ async function login() {
         if (tokenData.error === 'authorization_declined' || tokenData.error === 'expired_token') {
             throw new Error(tokenData.error);
         }
+        if (tokenData.error && tokenData.error !== 'authorization_pending' && tokenData.error !== 'slow_down') {
+            throw new Error(`${tokenData.error}: ${tokenData.error_description}`);
+        }
         // authorization_pending - keep polling
     }
     throw new Error('Login timed out');
