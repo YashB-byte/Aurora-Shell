@@ -600,6 +600,7 @@ Show-Aurora
         fi
     fi
 } &
+disown $!
 EOF
 }
 
