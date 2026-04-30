@@ -434,17 +434,28 @@ case "$1" in
             printf "%-25s %-25s %-10s %s\n" "$name" "$id" "$ver" "$src"
         done
         ;;
+    uninstall)
+        pkg="$2"
+        local resolved=$(jq -r ".packages | to_entries[] | select(.value.aliases? and (.value.aliases[] == \"$pkg\")) | .key" "$CLI_PACKAGES_FILE" 2>/dev/null | head -1)
+        [ -n "$resolved" ] && pkg="$resolved"
+        cmd_name=$(jq -r ".packages[\"$pkg\"].command" "$CLI_PACKAGES_FILE" 2>/dev/null)
+        if [ "$cmd_name" = "null" ]; then echo "❌ CLI package '$pkg' not found"; exit 1; fi
+        npm unlink "$cmd_name" 2>/dev/null || true
+        echo "✅ Uninstalled $pkg"
+        ;;
     *)
         echo "Aurora-Shell CLI Installer"
         echo ""
         echo "Usage:"
-        echo "  CLI install <package>  - Install CLI version of an app"
-        echo "  CLI list               - List available CLI packages"
-        echo "  CLI search <query>     - Search CLI packages"
+        echo "  CLI install <package>    - Install CLI version of an app"
+        echo "  CLI uninstall <package>  - Uninstall a CLI package"
+        echo "  CLI list                 - List available CLI packages"
+        echo "  CLI search <query>       - Search CLI packages"
         echo ""
         echo "Examples:"
         echo "  CLI install GitHub"
         echo "  CLI install Microsoft.Teams"
+        echo "  CLI uninstall Microsoft.Teams"
         ;;
 esac
 CLIEOF
