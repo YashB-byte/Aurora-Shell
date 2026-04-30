@@ -67,6 +67,8 @@ async function login() {
     console.log(chalk.white(`Enter code: ${chalk.bold.yellow(deviceData.user_code)}`));
     console.log(chalk.gray('Waiting for authentication...\n'));
     try { execSync(`open "${deviceData.verification_uri}"`); } catch(e) {}
+    // Copy code to clipboard for convenience
+    try { execSync(`echo -n "${deviceData.user_code}" | pbcopy`); console.log(chalk.gray('(code copied to clipboard)')); } catch(e) {}
 
     // Step 2: Poll for token
     const interval = Math.max((deviceData.interval || 5), 3) * 1000;
