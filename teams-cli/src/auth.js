@@ -62,11 +62,12 @@ async function login() {
         throw new Error('Failed to get device code: ' + JSON.stringify(deviceData));
     }
 
+    const loginUrl = 'https://microsoft.com/devicelogin';
     console.log(chalk.cyan('\n🔐 Teams Login'));
-    console.log(chalk.white(`Go to: ${chalk.bold(deviceData.verification_uri)}`));
+    console.log(chalk.white(`Go to: ${chalk.bold(loginUrl)}`));
     console.log(chalk.white(`Enter code: ${chalk.bold.yellow.bgBlack(' ' + deviceData.user_code + ' ')}`));
     console.log(chalk.gray('Waiting for authentication...\n'));
-    try { execSync(`open "${deviceData.verification_uri}"`); } catch(e) {}
+    try { execSync(`open "${loginUrl}"`); } catch(e) {}
 
     // Step 2: Poll for token
     const interval = Math.max((deviceData.interval || 5), 3) * 1000;
