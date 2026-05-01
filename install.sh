@@ -349,6 +349,9 @@ shell() {
 #!/bin/zsh
 CLI_PACKAGES_FILE="$HOME/.aurora-shell_files/cli-packages.json"
 
+# Always fetch latest packages from GitHub
+curl -sf "https://raw.githubusercontent.com/Seaus-tech/Aurora-Shell/dev/cli-packages.json" -o "$CLI_PACKAGES_FILE" 2>/dev/null || true
+
 if [ ! -f "$CLI_PACKAGES_FILE" ]; then
     cat > "$CLI_PACKAGES_FILE" << 'CLIPKG'
 {
@@ -640,3 +643,6 @@ fi
 echo -e "\n\033[1;32m✅ v$VER Deployed.\033[0m"
 
 echo "welcome to Aurora-Shell" | safe_lolcat
+
+sleep 1
+source ~/.zshrc
