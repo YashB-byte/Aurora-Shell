@@ -74,7 +74,7 @@ async function login() {
     const expires = Date.now() + (deviceData.expires_in || 900) * 1000;
     while (Date.now() < expires) {
         await new Promise(r => setTimeout(r, interval));
-        const tokenData = await post(`https://login.microsoftonline.com/consumers/oauth2/v2.0/token`, {
+        const tokenData = await post(`https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token`, {
             client_id: CLIENT_ID,
             grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
             device_code: deviceData.device_code
@@ -89,6 +89,7 @@ async function login() {
         if (tokenData.error && tokenData.error !== 'authorization_pending' && tokenData.error !== 'slow_down') {
             throw new Error(`${tokenData.error}: ${tokenData.error_description}`);
         }
+        process.stdout.write('.');
         // authorization_pending - keep polling
     }
     throw new Error('Login timed out');
