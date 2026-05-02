@@ -62,7 +62,7 @@ async function login() {
         throw new Error('Failed to get device code: ' + JSON.stringify(deviceData));
     }
 
-    const loginUrl = 'https://microsoft.com/devicelogin';
+    const loginUrl = deviceData.verification_uri || 'https://microsoft.com/devicelogin';
     console.log(chalk.cyan('\n🔐 Teams Login'));
     console.log(chalk.white(`Go to: ${chalk.bold(loginUrl)}`));
     console.log(chalk.white(`Enter code: ${chalk.bold.yellow.bgBlack(' ' + deviceData.user_code + ' ')}`));
