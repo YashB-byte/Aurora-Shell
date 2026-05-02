@@ -645,4 +645,4 @@ echo -e "\n\033[1;32m✅ v$VER Deployed.\033[0m"
 echo "welcome to Aurora-Shell" | safe_lolcat
 
 sleep 1
-source ~/.zshrc
+zsh
